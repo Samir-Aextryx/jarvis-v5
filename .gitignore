@@ -1,0 +1,12 @@
+# Build-/Runtime-Artefakte (werden nicht veröffentlicht)
+*.exe
+*.dll
+*.pak
+*.bin
+*.dat
+node_modules/
+config/
+resources/
+locales/
+*.log
+*.db
