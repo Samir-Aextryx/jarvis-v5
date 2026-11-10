@@ -79,3 +79,6 @@ backup-updates/
 /jev-tests.txt
 /refactor-tests.txt
 /pytest-results.txt
+
+# Rust build output (built inside Docker volumes)
+/rust/target/
