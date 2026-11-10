@@ -5,7 +5,8 @@
  * speech recognition, and audio playback into a single experience.
  */
 
-import { createOrb, type OrbState } from "./orb";
+import { type OrbState } from "./orb";
+import { createBackground } from "./background";
 import { createVoiceInput, createAudioPlayer } from "./voice";
 import { createSocket } from "./ws";
 import { openSettings, closeSettings, checkFirstTimeSetup, isSettingsOpen } from "./settings";
@@ -169,14 +170,11 @@ function updateStatus(state: State) {
 // ---------------------------------------------------------------------------
 
 const canvas = document.getElementById("orb-canvas") as HTMLCanvasElement;
-const orb = createOrb(canvas);
+const orb = createBackground(canvas);
 window.addEventListener('beforeunload', () => orb.destroy());
 const desktopBridge = (window as Window & {jarvisDesktop?: {
-  openMap(url: string): Promise<void>;
-  onMapVisible(callback: (visible: boolean) => void): void;
   getAuthToken?(): string;
 }}).jarvisDesktop;
-desktopBridge?.onMapVisible(visible => orb.setSuspended(visible));
 
 const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
 function resolveAuthToken(): string {
@@ -410,11 +408,6 @@ socket.onMessage((msg) => {
   }
   if (type === 'urgent_mail_source_status') {
     updateMailMonitorIssue(String(msg.source || ''), msg.available === true);
-    return;
-  }
-  if (type === "open_map") {
-    if (desktopBridge) void desktopBridge.openMap(String(msg.url)).catch(() => showError("The map could not open inside Jarvis."));
-    else showError("Open the Jarvis desktop app to use its integrated map.");
     return;
   }
   if (type === "task_update") {

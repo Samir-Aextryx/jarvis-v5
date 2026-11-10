@@ -296,17 +296,7 @@ async def voice_handler(ws: WebSocket):
                         if getattr(local_pc, 'last_action_silent', False):
                             response_text = ''
                 elif website_target:
-                    if website_target in {'jarvis:switzerland', 'jarvis:usa', 'jarvis:gods-eye'}:
-                        from jarvis.automation.gods_eye import ensure_running, SWITZERLAND_URL, USA_URL, BASE
-                        try:
-                            await ensure_running()
-                            map_url = {'jarvis:switzerland': SWITZERLAND_URL, 'jarvis:usa': USA_URL, 'jarvis:gods-eye': BASE + '/?performance=efficient'}[website_target]
-                            await ws.send_json({'type': 'open_map', 'url': map_url})
-                            response_text = runtime.remember_english('Opening the map inside Jarvis.')
-                        except Exception:
-                            report_failure('voice:252')
-                            response_text = runtime.remember_english('The map server could not start. Please check God’s Eye View.')
-                    elif website_target == 'jarvis:dashboard':
+                    if website_target == 'jarvis:dashboard':
                         dashboard_port = int(runtime.os.getenv('JARVIS_PORT', '8340'))
                         # Chrome's command line is readable by other processes;
                         # hand it a single-use code, never the long-lived token.

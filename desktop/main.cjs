@@ -7,7 +7,6 @@ nativeTheme.themeSource = 'dark';
 app.setAppUserModelId('local.jarvis.v5');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 let window;
-let mapWindow;
 const port = 8345;
 const origin = `http://127.0.0.1:${port}`;
 // Jarvis runs from source with stock electron.exe and no executable of its own,
@@ -16,28 +15,6 @@ const origin = `http://127.0.0.1:${port}`;
 // and runs inside this process; host.cjs gives it sockets, files and processes.
 const repoRoot = path.dirname(__dirname);
 const dataDir = process.env.JARVIS_DATA_DIR || path.join(app.getPath('documents'), 'Jarvis v5', 'config');
-
-ipcMain.handle('jarvis-open-map', async (event, value) => {
-  if (event.sender !== window?.webContents || new URL(event.senderFrame.url).origin !== origin) throw new Error('Invalid map sender');
-  const target = new URL(value);
-  if (target.origin !== 'http://127.0.0.1:4173' || target.pathname !== '/' || target.username || target.password) throw new Error('Invalid map address');
-  if (!mapWindow || mapWindow.isDestroyed()) {
-    mapWindow = new BrowserWindow({ parent: window, width: 1280, height: 850, minWidth: 800, minHeight: 600,
-      title: 'Jarvis v5 — Map', backgroundColor: '#050505', autoHideMenuBar: true,
-      webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, partition: 'persist:jarvis-map' } });
-    mapWindow.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-    mapWindow.webContents.session.setPermissionCheckHandler(() => false);
-    mapWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    mapWindow.webContents.on('will-navigate', (e, url) => { if (new URL(url).origin !== target.origin) e.preventDefault(); });
-    mapWindow.on('focus', () => window?.webContents.send('jarvis-map-visible', true));
-    mapWindow.on('closed', () => { mapWindow = null; if (!window?.isDestroyed()) window?.webContents.send('jarvis-map-visible', false); });
-  }
-  // Hash-only changes are not restored by the map application; load a fresh document.
-  target.searchParams.set('viewRequest', String(Date.now()));
-  await mapWindow.loadURL(target.href);
-  mapWindow.show();
-  mapWindow.focus();
-});
 
 async function start() {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -68,8 +45,6 @@ async function start() {
     title: 'Jarvis v5', backgroundColor: '#050505', autoHideMenuBar: true,
     icon: path.join(__dirname, 'icon.ico'),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
-  window.on('focus', () => window.webContents.send('jarvis-map-visible', false));
-  window.on('closed', () => { mapWindow?.close(); });
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//.test(url)) void shell.openExternal(url);
     return { action: 'deny' };
