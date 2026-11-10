@@ -12,6 +12,7 @@ import { apiGet, apiPost } from './api/client';
 import { openPersonalPanel } from './personal-panel';
 import { agentSettingsHTML, loadAgentSettings, wireAgentSettings } from './agent-settings';
 import { providerKeysHTML, loadProviderKeys, wireProviderKeys, readLLMStatus } from './provider-settings';
+import { getBackgroundMode, setBackgroundMode } from './background';
 
 interface StatusResponse {
   codex_installed: boolean;
@@ -204,6 +205,15 @@ function buildPanelHTML(): string {
         <!-- User Preferences -->
         <section class="settings-section" id="section-preferences">
           <h3>User Preferences</h3>
+
+          <div class="settings-field">
+            <label for="input-background">Background</label>
+            <select id="input-background">
+              <option value="particles">Particles — default</option>
+              <option value="solar">Solar system</option>
+            </select>
+            <p class="google-help">Changes the animated background behind Jarvis immediately. The sun pulses while Jarvis speaks and the planets speed up while it thinks.</p>
+          </div>
 
           <div class="settings-field">
             <label for="input-mic-sensitivity">Microphone sensitivity</label>
@@ -423,6 +433,9 @@ function wireEvents() {
     });
   });
   document.getElementById("refresh-autonomy")?.addEventListener("click", loadAutonomy);
+  const background = document.getElementById("input-background") as HTMLSelectElement;
+  background.value = getBackgroundMode();
+  background.addEventListener("change", () => setBackgroundMode(background.value === "solar" ? "solar" : "particles"));
   const speechPause = document.getElementById("input-speech-pause") as HTMLSelectElement;
   speechPause.value = localStorage.getItem("jarvis_reply_delay_ms") ?? "0";
   speechPause.addEventListener("change", () => localStorage.setItem("jarvis_reply_delay_ms", speechPause.value));

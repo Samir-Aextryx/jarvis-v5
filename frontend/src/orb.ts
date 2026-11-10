@@ -344,7 +344,9 @@ export function createOrb(canvas: HTMLCanvasElement): Orb {
     destroy() {
       destroyed = true;
       window.removeEventListener("resize", onResize);
+      geo.dispose(); mat.dispose(); lineGeo.dispose(); lineMat.dispose(); electronGeo.dispose(); electronMat.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
     },
   };
 }

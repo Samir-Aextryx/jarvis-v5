@@ -224,22 +224,13 @@ Nachrichten werden nicht mehr nur in einer separaten Textdatei vorbereitet. Jarv
 ChatGPT-Prompts nutzen dieselbe Steuerung und werden nur als abgesendet gemeldet, wenn der genaue Text eingegeben und das anschließend leere Eingabefeld beobachtet wurde. Das bestätigt keine fertige ChatGPT-Antwort.
 
 
-## God's Eye View / Schweiz
-
-„Open Switzerland“ oder „Öffne die Schweiz“ startet die lokale Karte im eigenen Jarvis-Kartenfenster mit Schweiz-Ansicht sowie zivilen und militärischen Flugzeugdaten. „Open God's Eye View“ öffnet die allgemeine Karte. Falls nötig, startet Jarvis den installierten Kartenserver automatisch. Die Anzeige hängt von der Abdeckung und Verfügbarkeit der öffentlichen Datenquellen ab.
-
-Die Karte nutzt standardmäßig 30 FPS, reduzierte Renderauflösung und einfache Kantenglättung; die Schweiz-Ansicht zeigt Flugzeugsymbole statt aufwendiger 3D-Modelle. Für volle Qualität kann ?performance=quality in der Karten-URL verwendet werden. Jarvis selbst rendert seine Animation mit maximal 30 FPS im Leerlauf bzw. 60 FPS bei Aktivität und reduziert die Pixeldichte. Spracheingabe und -ausgabe werden davon nicht gedrosselt.
-
-
-## Sprach- und Kartenupdate (15. September 2026)
+## Sprachupdate (15. September 2026)
 
 Das Mikrofon zeichnet auch während der Transkription weiter auf. Zusammenhängende Abschnitte werden in Reihenfolge zusammengeführt; neue Sprache verhindert die vorzeitige Ausgabe einer vorherigen Transkription. Maximal zwei Erkennungsanfragen sind gleichzeitig aktiv. Bei langsamer Verbindung erscheint eine Fehlermeldung statt einer unbegrenzten Warteschlange. Stummschalten verwirft offene Aufnahmen und Ergebnisse. Mono-Opus mit 32 kbit/s reduziert die Uploadmenge. Die einstellbare Sprechpause bleibt erhalten.
 
 Fish-Audio-Daten werden direkt beim Eintreffen weitergegeben. Die tatsächliche Antwortzeit hängt weiterhin von Netzwerk und API ab. Es wurde keine feste End-to-End-Latenz garantiert.
 
 Autonome Aufgaben können auch mit „Take care of …“, „Handle this task …“ oder „Kümmere dich um …“ beginnen. Die bestehenden Grenzen und Ergebnisprüfungen gelten weiter.
-
-„Open USA“ und „Open Switzerland“ öffnen Satellitenbilder mit schräger Kamera im wiederverwendeten Jarvis-Kartenfenster. Gelände hängt vom verfügbaren Terrain-Dienst ab; Satellitenbilder sind keine Live-Aufnahmen. Google-3D-Gebäude benötigen die separat eingerichtete Kartenquelle. Während die Karte im Vordergrund ist, pausiert die Jarvis-Partikelanimation.
 
 
 ## Mail-Aufgaben
@@ -364,3 +355,7 @@ Geprüft: 54 automatisierte Tests für Gedächtnis, Kalender, API-Zugriff, Sprac
 Open the top-right menu, then Settings > AI Settings · Jev. Enter your TypeSafe Jev API key, select Save Jev key, then Test Connection. The key is stored in Windows Credential Manager and is never shown again after saving. Remove Jev key deletes it from the vault.
 
 Without a stored key the settings show `[JEV_KEY_MISSING]`. The Jev connection test returns the same code. If the “Use existing routing and OpenAI when Jev is unavailable” checkbox is on, Jarvis also shows the code for a routed command and can continue with that fallback. If it is off, Jarvis reports the error instead of routing the command. This does not indicate a missing OpenAI or Fish Audio key; those services have separate settings.
+
+## Hintergrund wählen (10. November 2026)
+
+Unter Settings → User Preferences → Background kannst du zwischen „Particles“ (Standard) und „Solar system“ wählen. Die Änderung gilt sofort und bleibt gespeichert. Im Sonnensystem pulsiert die Sonne, während Jarvis spricht; beim Nachdenken kreisen die Planeten schneller und die Umlaufbahnen leuchten auf. God's Eye View und die Kartenbefehle („Open Switzerland“, „Open USA“) wurden entfernt.

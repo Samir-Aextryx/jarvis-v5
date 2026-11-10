@@ -25,12 +25,6 @@ def parse_website_request(text):
     target = re.sub(r"(?i)^(?:please|bitte)\s+", "", match[1]).strip().rstrip("!")
     target = re.sub(r"(?i)\s+(?:punkt|dot)\s+", ".", target)
     site_name = re.sub(r"(?i)\s+(?:in|on|with|mit)\s+(?:google\s+)?chrome[.!?]*$", "", target).rstrip(".!?").lower()
-    if site_name in {'switzerland','schweiz','die schweiz','swiss airspace'}:
-        return 'jarvis:switzerland'
-    if site_name in {'usa','the usa','die usa','u.s.a','u.s.a.','u s a','us','the us','united states','the united states','united states of america','amerika','america','vereinigte staaten','die vereinigten staaten'}:
-        return 'jarvis:usa'
-    if site_name in {"god's eye view",'gods eye view','gods eye',"god’s eye view"}:
-        return 'jarvis:gods-eye'
     if site_name in {"dashboard", "the dashboard", "das dashboard", "jarvis dashboard", "jarvis v5 dashboard"}:
         return "jarvis:dashboard"
     if site_name in SITES:
@@ -85,9 +79,6 @@ def open_in_chrome(url):
 
 
 async def open_website(target):
-    if target in {'jarvis:switzerland','jarvis:gods-eye','jarvis:usa'}:
-        from jarvis.automation.gods_eye import open_map
-        return remember_english(await open_map(switzerland=target=='jarvis:switzerland',usa=target=='jarvis:usa'))
     try:
         url = validate_url(target)
         await asyncio.to_thread(open_in_chrome, url)
