@@ -14,7 +14,7 @@ from pathlib import Path
 import pywintypes
 from jarvis.core.runtime_paths import DATA_ROOT
 from jarvis.integrations.google_access import google_access
-from jarvis.integrations.outlook_com import recent_unread_outlook_headers
+from jarvis.integrations.outlook_com import outlook_is_running, recent_unread_outlook_headers
 
 log = logging.getLogger("jarvis.urgent_mail")
 _URGENT_SUBJECT = re.compile(
@@ -238,8 +238,10 @@ class UrgentMailMonitor:
             providers = []
             now = clock()
             if now >= next_outlook_scan:
-                providers.append(('outlook', recent_unread_outlook_headers))
                 next_outlook_scan = now + _OUTLOOK_POLL_SECONDS
+                # Watch Outlook only while the user has it open; Jarvis never starts it.
+                if await asyncio.to_thread(outlook_is_running):
+                    providers.append(('outlook', recent_unread_outlook_headers))
             if now >= next_gmail_scan:
                 next_gmail_scan = now + _GMAIL_POLL_SECONDS
                 try:

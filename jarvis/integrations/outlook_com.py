@@ -123,18 +123,20 @@ def _outlook_is_active():
         pythoncom.CoUninitialize()
 
 
+def outlook_is_running():
+    """Whether the user has Classic Outlook open; never starts it."""
+    try:
+        return _outlook_is_active()
+    except Exception:
+        return False
+
+
 async def recent_unread_outlook_headers():
-    if not await asyncio.to_thread(_outlook_is_active):
-        # Launch the verified Classic Outlook UI first. Dispatching COM when
-        # Outlook is closed can leave a hidden, modal-blocked -Embedding process.
-        from jarvis.automation.app_launcher import open_app
-        await open_app('Outlook Classic', wait_until_ready=True)
-        for _ in range(20):
-            if await asyncio.to_thread(_outlook_is_active):
-                break
-            await asyncio.sleep(.5)
-        else:
-            raise OutlookUnavailable('Classic Outlook did not become ready for urgent mail monitoring.')
+    # Background monitoring only reads an Outlook the user opened. Starting it
+    # here launched Outlook with every Jarvis start; dispatching COM while it is
+    # closed would leave a hidden, modal-blocked -Embedding process instead.
+    if not await asyncio.to_thread(outlook_is_running):
+        raise OutlookUnavailable('Classic Outlook is not open.')
     return await asyncio.to_thread(_recent_unread_outlook_headers)
 
 

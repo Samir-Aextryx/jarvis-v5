@@ -246,6 +246,7 @@ class AlertTests(unittest.IsolatedAsyncioTestCase):
         ticks = iter((0.0, 30.0, 60.0, 90.0))
         stop_after_four = AsyncMock(side_effect=[None, None, None, asyncio.CancelledError()])
         with patch.object(monitor, 'scan', new=AsyncMock()) as scan, \
+             patch('jarvis.integrations.urgent_mail.outlook_is_running', return_value=True), \
              patch.object(monitor, 'process_calls', new=AsyncMock()) as calls, \
              patch('jarvis.integrations.urgent_mail.google_access.status',
                    return_value={'connected': True, 'services': ['gmail']}) as google:
@@ -257,6 +258,26 @@ class AlertTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(calls.await_count, 4)
         self.assertEqual([call.args[0] for call in stop_after_four.await_args_list],
                          [30, 30, 30, 30])
+
+    async def test_closed_outlook_is_skipped_without_starting_it(self):
+        monitor = self.monitor()
+        ticks = iter((0.0, 30.0))
+        stop_after_two = AsyncMock(side_effect=[None, asyncio.CancelledError()])
+        notify = AsyncMock()
+        with patch.object(monitor, 'scan', new=AsyncMock()) as scan, \
+             patch('jarvis.integrations.urgent_mail.outlook_is_running', return_value=False) as running, \
+             patch('jarvis.automation.app_launcher.open_app', new=AsyncMock()) as open_app, \
+             patch.object(monitor, 'process_calls', new=AsyncMock()), \
+             patch('jarvis.integrations.urgent_mail.google_access.status',
+                   return_value={'connected': False, 'services': []}):
+            with self.assertRaises(asyncio.CancelledError):
+                await monitor.run(notify, clock=lambda: next(ticks), sleep=stop_after_two)
+        scan.assert_not_awaited()
+        open_app.assert_not_awaited()
+        self.assertEqual(running.call_count, 2)
+        # No error banner and no baseline: a later scan of the open Outlook starts cleanly.
+        notify.assert_not_awaited()
+        self.assertNotIn('outlook', monitor.seen)
 
     async def test_outlook_failure_is_reported_and_backed_off(self):
         monitor = self.monitor()
@@ -270,6 +291,7 @@ class AlertTests(unittest.IsolatedAsyncioTestCase):
             monitor.errors.pop(source, None)
         stop_after_five = AsyncMock(side_effect=[None] * 4 + [asyncio.CancelledError()])
         with patch.object(monitor, 'scan', side_effect=scan), \
+             patch('jarvis.integrations.urgent_mail.outlook_is_running', return_value=True), \
              patch('jarvis.integrations.urgent_mail.google_access.status',
                    return_value={'connected': False, 'services': []}):
             with self.assertRaises(asyncio.CancelledError):

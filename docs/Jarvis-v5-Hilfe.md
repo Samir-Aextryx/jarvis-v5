@@ -13,12 +13,12 @@ kurz lokal kopiert und die bisherige Zwischenablage anschließend wiederhergeste
 Schlägt der Abgleich fehl, wird kein Anruf vorbereitet oder gewählt. Auch ein
 erfolgreicher Abgleich löst derzeit noch keinen Anruf aus.
 
-Während das Backend läuft, prüft Jarvis alle 30 Sekunden nur die Kopfzeilen
-ungelesener Outlook-Nachrichten. Verbundenes Gmail wird alle 90 Sekunden
-geprüft. Falls Outlook vorübergehend nicht erreichbar ist, zeigt Jarvis einen
-deutlichen Hinweis und versucht die Verbindung mit Abstand erneut. Für die
-Überwachung öffnet Jarvis bei Bedarf das klassische Outlook als sichtbare App;
-eine unsichtbare COM-Instanz wird nicht gestartet. Der erste Scan
+Während das Backend läuft und das klassische Outlook geöffnet ist, prüft
+Jarvis alle 30 Sekunden nur die Kopfzeilen ungelesener Outlook-Nachrichten.
+Jarvis startet Outlook dafür nicht selbst; ist Outlook geschlossen, wird die
+Outlook-Überwachung still übersprungen. Verbundenes Gmail wird alle 90 Sekunden
+geprüft. Falls ein geöffnetes Outlook nicht erreichbar ist, zeigt Jarvis einen
+deutlichen Hinweis und versucht die Verbindung mit Abstand erneut. Der erste Scan
 setzt den Ausgangsstand. Danach erscheint für neu eingetroffene Nachrichten
 mit hoher Priorität oder eindeutig dringendem Betreff ein Hinweis in Jarvis.
 Nachrichteninhalte lösen niemals Befehle aus. Der Hinweis ersetzt keinen

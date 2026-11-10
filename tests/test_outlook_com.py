@@ -65,16 +65,21 @@ class OutlookComTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result[0]['id'], '0')
         self.assertNotIn('body', result[0])
 
-    async def test_urgent_scan_opens_classic_outlook_before_com(self):
-        with patch('jarvis.integrations.outlook_com._outlook_is_active',
-                   side_effect=[False, True]), \
-             patch('jarvis.automation.app_launcher.open_app', new=AsyncMock(
-                 return_value={'success': True})) as open_app, \
+    async def test_urgent_scan_reads_an_open_outlook(self):
+        with patch('jarvis.integrations.outlook_com._outlook_is_active', return_value=True), \
              patch('jarvis.integrations.outlook_com._recent_unread_outlook_headers',
                    return_value=[{'id': 'new'}]):
             result = await recent_unread_outlook_headers()
         self.assertEqual(result, [{'id': 'new'}])
-        open_app.assert_awaited_once_with('Outlook Classic', wait_until_ready=True)
+
+    async def test_urgent_scan_never_starts_a_closed_outlook(self):
+        with patch('jarvis.integrations.outlook_com._outlook_is_active', return_value=False), \
+             patch('jarvis.automation.app_launcher.open_app', new=AsyncMock()) as open_app, \
+             patch('jarvis.integrations.outlook_com._recent_unread_outlook_headers') as reader:
+            with self.assertRaises(OutlookUnavailable):
+                await recent_unread_outlook_headers()
+        open_app.assert_not_awaited()
+        reader.assert_not_called()
 
     def test_recent_reader_is_read_only_bounded_and_sorted(self):
         now=datetime(2026,9,25,12)
