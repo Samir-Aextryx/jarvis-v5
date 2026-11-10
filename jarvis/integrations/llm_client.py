@@ -51,10 +51,18 @@ class LLMClient:
             effort = os.getenv('OPENAI_REASONING_EFFORT', 'low')
             payload['reasoning_effort'] = effort if effort in {'minimal', 'low', 'medium', 'high'} else 'low'
         elif self.provider == 'ollama':
-            # DeepSeek on Ollama thinks at "high" unless told otherwise; "none" answers directly.
             effort = os.getenv('OPENAI_REASONING_EFFORT', 'low')
-            payload['reasoning_effort'] = {'medium': 'high', 'xhigh': 'max'}.get(
-                effort, effort if effort in {'none', 'low', 'high', 'max'} else 'low')
+            if payload['model'].split(':', 1)[0] == 'gpt-oss':
+                # GPT-OSS always reasons; "low" is its fastest level and it cannot answer directly.
+                sent = {'medium': 'medium', 'high': 'high', 'xhigh': 'high', 'max': 'high'}.get(effort, 'low')
+            else:
+                # DeepSeek on Ollama thinks at "high" unless told otherwise; "none" answers directly.
+                sent = {'medium': 'high', 'xhigh': 'max'}.get(
+                    effort, effort if effort in {'none', 'low', 'high', 'max'} else 'low')
+            payload['reasoning_effort'] = sent
+            if sent != 'none':
+                # Ollama counts the reasoning trace against max_tokens; keep the answer's budget.
+                payload['max_tokens'] += 1024
         if json_schema is not None:
             payload['response_format'] = {'type': 'json_schema', 'json_schema': {
                 'name': 'pc_plan', 'strict': True, 'schema': json_schema}}

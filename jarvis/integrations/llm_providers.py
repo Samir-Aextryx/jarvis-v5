@@ -23,7 +23,7 @@ PROVIDERS = {
     'grok': Provider('grok', 'Grok', 'XAI_API_KEY', 'GROK_MODEL',
                     'grok-4.7', 'https://api.x.ai/v1/chat/completions'),
     'ollama': Provider('ollama', 'Ollama Cloud', 'OLLAMA_API_KEY', 'OLLAMA_MODEL',
-                      'deepseek-v4.1-flash', 'https://ollama.com/v1/chat/completions'),
+                      'gpt-oss:120b', 'https://ollama.com/v1/chat/completions'),
 }
 
 PROVIDER_CHOICE_ERROR = 'Choose OpenAI, Gemini, Grok or Ollama Cloud as the AI provider.'

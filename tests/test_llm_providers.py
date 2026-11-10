@@ -155,7 +155,7 @@ def test_persisted_selection_preserves_each_model_and_legacy_settings():
         settings.save({'large_model': 'gpt-6-luna'})
         result = settings.save({'llm_provider': 'gemini', 'gemini_model': 'custom-gemini'})
         assert result['large_model'] == 'gpt-6-luna'
-        assert result['ollama_model'] == 'deepseek-v4.1-flash'
+        assert result['ollama_model'] == 'gpt-oss:120b'
         assert AgentSettings(root).get()['llm_provider'] == 'gemini'
         apply_provider_settings(result)
         assert LLMClient('test').provider == 'gemini'
@@ -239,10 +239,28 @@ async def test_ollama_sends_deepseek_flash_with_a_supported_thinking_level(effor
         assert body['reasoning_effort'] == sent
         return httpx.Response(200, json={'choices': [{'message': {'content': 'OK'}, 'finish_reason': 'stop'}]})
 
+    with patch.dict(os.environ, {'OPENAI_REASONING_EFFORT': effort, 'OLLAMA_MODEL': 'deepseek-v4.1-flash'}):
+        client = LLMClient('ollama-key', provider='ollama', transport=httpx.MockTransport(respond))
+        assert (await client.create(messages=[{'role': 'user', 'content': 'Hi'}])).content[0].text == 'OK'
+
+
+@pytest.mark.parametrize('effort,sent', [('none', 'low'), ('low', 'low'), ('medium', 'medium'),
+                                         ('high', 'high'), ('xhigh', 'high'), ('max', 'high')])
+@pytest.mark.asyncio
+async def test_ollama_gpt_oss_always_reasons_with_room_for_the_answer(effort, sent):
+    def respond(request):
+        body = json.loads(request.content)
+        assert body['model'] == 'gpt-oss:120b'
+        assert body['reasoning_effort'] == sent
+        # The reasoning trace counts against max_tokens; the answer keeps its own 250 tokens.
+        assert body['max_tokens'] == 250 + 1024
+        return httpx.Response(200, json={'choices': [{'message': {'content': 'OK'}, 'finish_reason': 'stop'}]})
+
     with patch.dict(os.environ, {'OPENAI_REASONING_EFFORT': effort}):
         os.environ.pop('OLLAMA_MODEL', None)
         client = LLMClient('ollama-key', provider='ollama', transport=httpx.MockTransport(respond))
-        assert (await client.create(messages=[{'role': 'user', 'content': 'Hi'}])).content[0].text == 'OK'
+        result = await client.create(messages=[{'role': 'user', 'content': 'Hi'}], max_tokens=250)
+        assert result.content[0].text == 'OK'
 
 
 def test_model_ids_accept_one_ollama_tag_only():

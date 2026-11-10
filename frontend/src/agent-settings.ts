@@ -3,7 +3,7 @@ type AgentPrefs = {work_apps:string[]; fallback:boolean; automation:boolean; act
 export const agentSettingsHTML = `<section class="settings-section" id="section-agent">
   <h3>AI Settings</h3>
   <label for="agent-provider">Jarvis AI provider</label>
-  <select id="agent-provider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="grok">xAI Grok</option><option value="ollama">Ollama Cloud (DeepSeek Flash)</option></select>
+  <select id="agent-provider"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="grok">xAI Grok</option><option value="ollama">Ollama Cloud (GPT-OSS 120B, fastest)</option></select>
   <p class="google-help">Choose the AI for conversation, writing and task planning. Add its API key in Voice &amp; AI keys. Only the selected provider receives these requests; switching takes effect after saving. Fish Audio keeps the Jarvis voice. Speech recognition still uses your OpenAI key.</p>
   <label for="agent-model">OpenAI model ID</label><input id="agent-model" type="text" maxlength="80">
   <label for="agent-gemini-model">Gemini model ID</label><input id="agent-gemini-model" type="text" maxlength="100">
