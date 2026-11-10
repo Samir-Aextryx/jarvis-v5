@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from jarvis.integrations.urgent_mail import UrgentMailMonitor, is_urgent_header
 from jarvis.automation.app_windows import _window_matches_app
+from jarvis.voice.call_audio_bridge import CallAudioDevices
 from jarvis.integrations.whatsapp_call import (
     attempt_urgent_call, boss_number_configured, call_readiness,
     normalize_swiss_mobile, parse_call_request, prepare_call_to_boss,
@@ -142,8 +143,11 @@ class AlertTests(unittest.IsolatedAsyncioTestCase):
     async def test_beta_discovery_refreshes_stale_catalog(self):
         standard = {'name': 'WhatsApp', 'id': 'standard'}
         beta = {'name': 'WhatsApp Beta', 'id': 'beta'}
+        # Never enumerate the real audio endpoints in a test; soundcard can crash the process there.
+        no_devices = CallAudioDevices(None, None, None, None)
         with patch('jarvis.automation.app_launcher.installed_apps', side_effect=[[standard], [standard, beta]]) as catalog, \
-             patch('jarvis.integrations.whatsapp_call.boss_number_configured', return_value=True):
+             patch('jarvis.integrations.whatsapp_call.boss_number_configured', return_value=True), \
+             patch('jarvis.voice.call_audio_bridge.discover_call_audio_devices', return_value=no_devices):
             state = await call_readiness()
         self.assertTrue(state['whatsapp_beta_installed'])
         self.assertFalse(state['automatic_call_ready'])
