@@ -1,0 +1,8 @@
+{
+  "method": "synthetic audio; server arrival of first PCM, not acoustic playback",
+  "stt_ms": 1660,
+  "llm_complete_ms": 1790,
+  "tts_first_pcm_ms": 308,
+  "estimated_old_speech_end_to_pcm_ms": 5759,
+  "processing_complete_ms": 4798
+}

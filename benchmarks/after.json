@@ -1,0 +1,32 @@
+[
+  {
+    "method": "paced synthetic microphone PCM; measured to first server PCM, not acoustic playback",
+    "speech_end": 0,
+    "stt_final": 3026,
+    "llm_first_token": 5157,
+    "first_tts_chunk": 5822,
+    "response_complete": 7027,
+    "partial_before_speech_end": true,
+    "estimated_browser_first_audio": 5837
+  },
+  {
+    "method": "paced synthetic microphone PCM; measured to first server PCM, not acoustic playback",
+    "speech_end": 0,
+    "stt_final": 1104,
+    "llm_first_token": 2254,
+    "first_tts_chunk": 2702,
+    "response_complete": 3792,
+    "partial_before_speech_end": true,
+    "estimated_browser_first_audio": 2717
+  },
+  {
+    "method": "paced synthetic microphone PCM; measured to first server PCM, not acoustic playback",
+    "speech_end": 0,
+    "stt_final": 859,
+    "llm_first_token": 1664,
+    "first_tts_chunk": 2082,
+    "response_complete": 2696,
+    "partial_before_speech_end": true,
+    "estimated_browser_first_audio": 2097
+  }
+]

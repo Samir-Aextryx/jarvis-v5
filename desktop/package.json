@@ -1,0 +1,15 @@
+{
+  "name": "jarvis-v5",
+  "version": "5.0.0",
+  "description": "Jarvis v5 voice assistant for Windows, started from source",
+  "author": "Samir",
+  "license": "SEE LICENSE IN ../LICENSE",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "43.3.0"
+  }
+}

@@ -1,0 +1,15 @@
+const ts=require('../frontend/node_modules/typescript'),fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const sandbox={exports:{}};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('frontend/src/voice-activity.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,sandbox);
+const Activity=sandbox.exports.VoiceActivity;
+const quiet=new Activity();for(let i=0;i<50;i++)quiet.calibrate(.001);
+assert.equal(quiet.speech(.008,false),true,'Quiet speech below old .012 threshold is captured');
+assert.equal(quiet.speech(.0045,true),true,'Soft speech ending is retained');
+assert.equal(quiet.speech(0,true),false,'Silence still ends the utterance');
+const noisy=new Activity();for(let i=0;i<50;i++)noisy.calibrate(.015);
+assert.equal(noisy.speech(.015,false),false,'Calibrated background noise does not interrupt');
+assert.equal(noisy.speech(.08,false),true,'Clear speech above noise starts the utterance');
+assert.equal(quiet.speech(.004,false,'sensitive'),true);
+assert.equal(quiet.speech(.008,false,'noisy'),false);
+assert.equal(quiet.speech(NaN,false),false);
+console.log('Adaptive voice detection: quiet speech, speech endings, calibrated noise and sensitivity passed.');

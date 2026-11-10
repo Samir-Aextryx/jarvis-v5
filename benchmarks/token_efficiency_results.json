@@ -1,0 +1,67 @@
+{
+  "method": "o200k_base input-text tokens only; synthetic fixtures; no API calls, output tokens, protocol overhead or cache pricing",
+  "conversation": {
+    "short_100_turns_history_and_current_request": {
+      "before": 11402,
+      "after": 11402,
+      "saved_percent": 0.0
+    },
+    "long_100_turns_history_and_current_request": {
+      "before": 300680,
+      "after": 131030,
+      "saved_percent": 56.4
+    }
+  },
+  "summaries": {
+    "20_turns": {
+      "input_tokens": {
+        "before": 408,
+        "after": 365,
+        "saved_percent": 10.5
+      },
+      "calls": {
+        "before": 2,
+        "after": 2,
+        "saved_percent": 0.0
+      }
+    },
+    "50_turns": {
+      "input_tokens": {
+        "before": 6837,
+        "after": 2021,
+        "saved_percent": 70.4
+      },
+      "calls": {
+        "before": 8,
+        "after": 8,
+        "saved_percent": 0.0
+      }
+    },
+    "100_turns": {
+      "input_tokens": {
+        "before": 34752,
+        "after": 4781,
+        "saved_percent": 86.2
+      },
+      "calls": {
+        "before": 18,
+        "after": 18,
+        "saved_percent": 0.0
+      }
+    }
+  },
+  "memory": {
+    "100_messages_80_general_20_personal_empty_existing_memory": {
+      "input_tokens": {
+        "before": 14380,
+        "after": 2890,
+        "saved_percent": 79.9
+      },
+      "calls": {
+        "before": 100,
+        "after": 20,
+        "saved_percent": 80.0
+      }
+    }
+  }
+}

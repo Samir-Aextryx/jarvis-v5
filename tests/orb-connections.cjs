@@ -1,0 +1,17 @@
+const ts = require('../frontend/node_modules/typescript');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const code = ts.transpileModule(fs.readFileSync('frontend/src/orb-connections.ts','utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const sandbox={exports:{}};
+vm.runInNewContext(code,sandbox);
+const find=sandbox.exports.findConnections;
+const positions=new Float32Array([0,0,0, 1,0,0, 3,0,0, 0,1,0]);
+const pairs=new Uint32Array(12);
+assert.equal(find(positions,1,1.5,pairs),3);
+assert.deepEqual(Array.from(pairs.slice(0,6)),[0,1,0,3,1,3]);
+assert.equal(find(positions,1,1.5,new Uint32Array(2)),1);
+assert.equal(find(positions,2,4,pairs),1);
+assert.deepEqual(Array.from(pairs.slice(0,2)),[0,2]);
+assert.equal(find(positions,1,.5,pairs),0);
+console.log('Connection geometry and capacity checks passed.');

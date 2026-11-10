@@ -1,0 +1,15 @@
+{
+  "health": "passed",
+  "worklet": "passed",
+  "live_partial": true,
+  "live_final": "passed",
+  "streamed_pcm_packets": 156,
+  "stt_final_ms": 914,
+  "first_server_pcm_ms": 2271,
+  "stages": {
+    "stt_final": 923,
+    "llm_first_token": 1955,
+    "first_tts_chunk": 2271
+  },
+  "method": "installed backend; synthetic paced input; no acoustic playback"
+}

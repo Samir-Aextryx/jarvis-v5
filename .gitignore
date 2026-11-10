@@ -1,12 +1,81 @@
-# Build-/Runtime-Artefakte (werden nicht veröffentlicht)
-*.exe
-*.dll
-*.pak
-*.bin
-*.dat
+# Environment
+.env
+.env.local
+
+# Dependencies
 node_modules/
-config/
-resources/
-locales/
-*.log
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Data (user-specific, generated at runtime)
 *.db
+data/*.jsonl
+data/active_session.json
+data/.jarvis_output.txt
+
+# Certificates
+*.pem
+*.pfx
+*.p12
+*.key
+/signed-releases/
+
+# Build
+dist/
+.vite/
+frontend/.vite/
+
+# IDE / System
+.DS_Store
+.vscode/
+.idea/
+.claude/
+.arch/
+
+# Desktop overlay
+desktop-overlay/node_modules/
+context/
+*.db-shm
+*.db-wal
+server.log
+server.pid
+build-backend/
+dist-backend/
+release-v5/
+.app-test/
+MEMORY.md
+MEMORY.md.tmp
+backup-updates/
+*.mp3
+
+# Generated artifacts and local state
+/build*/
+/dist*/
+/release*/
+/backup-updates/
+/.agents/
+/data/
+!/data/.gitkeep
+*.log
+*.pid
+/*-results.txt
+/*-regressions.txt
+/*-tests.txt
+/*-build.txt
+/docs/MEMORY.md
+*.wav
+*.pcm
+.env.*
+!.env.example
+
+/backup-archive-verified.json
+/browser-install.log
+/jev-tests.txt
+/refactor-tests.txt
+/pytest-results.txt
