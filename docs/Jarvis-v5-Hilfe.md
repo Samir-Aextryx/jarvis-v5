@@ -45,8 +45,8 @@ die falsche Person erreichen oder Jarvis' Stimme nicht übertragen. Der
 Verbindungsstatus steht in den Einstellungen.
 
 Die App über die Desktop-Verknüpfung **Jarvis v5** starten. Jarvis läuft direkt
-aus dem Quellcode: Die Verknüpfung startet Electron mit dem Ordner `desktop/`, der
-Python-Server startet automatisch im Hintergrund. Eine eigene EXE gibt es nicht,
+aus dem Quellcode: Die Verknüpfung startet Electron mit dem Ordner `desktop/`, das
+Backend (Rust, als WebAssembly) läuft direkt darin. Eine eigene EXE gibt es nicht,
 daher funktioniert der Start auch mit aktivem Smart App Control. Eingerichtet wird
 alles einmalig mit `scripts\install.ps1` (siehe README).
 
@@ -350,12 +350,6 @@ Noch nicht enthalten: Kalender-Erinnerungsbenachrichtigungen und Serientermine.
 Geprüft: 54 automatisierte Tests für Gedächtnis, Kalender, API-Zugriff, Sprachöffnung, App-Lernen und bestehende Sprachfunktionen; zusätzlich Speichern und erneutes Laden in der Oberfläche mit isolierten Testdaten. Google-Antworten wurden simuliert, es wurden keine echten Google-Termine angelegt.
 
 
-## Jev API key and error codes (23 September 2026)
+## God's Eye View entfernt (10. November 2026)
 
-Open the top-right menu, then Settings > AI Settings · Jev. Enter your TypeSafe Jev API key, select Save Jev key, then Test Connection. The key is stored in Windows Credential Manager and is never shown again after saving. Remove Jev key deletes it from the vault.
-
-Without a stored key the settings show `[JEV_KEY_MISSING]`. The Jev connection test returns the same code. If the “Use existing routing and OpenAI when Jev is unavailable” checkbox is on, Jarvis also shows the code for a routed command and can continue with that fallback. If it is off, Jarvis reports the error instead of routing the command. This does not indicate a missing OpenAI or Fish Audio key; those services have separate settings.
-
-## Hintergrund wählen (10. November 2026)
-
-Unter Settings → User Preferences → Background kannst du zwischen „Particles“ (Standard) und „Solar system“ wählen. Die Änderung gilt sofort und bleibt gespeichert. Im Sonnensystem pulsiert die Sonne, während Jarvis spricht; beim Nachdenken kreisen die Planeten schneller und die Umlaufbahnen leuchten auf. God's Eye View und die Kartenbefehle („Open Switzerland“, „Open USA“) wurden entfernt.
+God's Eye View und die Kartenbefehle („Open Switzerland“, „Open USA“) wurden entfernt.

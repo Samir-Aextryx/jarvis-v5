@@ -1,11 +1,11 @@
 # JARVIS für Windows mit OpenAI
 
 Einrichten: einmalig `powershell -ExecutionPolicy Bypass -File scripts\install.ps1`
-(Python-venv, Frontend-Build, Electron, Desktop-Verknüpfung; siehe README).
-Start: Desktop-Verknüpfung **Jarvis v5** (Electron + `.venv`) oder
-`scripts\Start-JARVIS.cmd` für den Browser-Modus. Der Server lauscht nur auf `127.0.0.1`.
-Die Desktop-Shell verwendet Port **8345**, der eigenständige Start **8340**;
-der Port lässt sich über `JARVIS_PORT` ändern.
+(Frontend-Build, Electron, Desktop-Verknüpfung; siehe README). Python und Rust
+werden zum Ausführen nicht gebraucht: Das Backend ist in Rust geschrieben, zu
+WebAssembly kompiliert und liegt fertig in `desktop\backend`.
+Start: Desktop-Verknüpfung **Jarvis v5** oder `scripts\Start-JARVIS.cmd`.
+Der Server lauscht nur auf `127.0.0.1`, Port **8345**.
 
 In Settings folgende Werte eintragen, Save Keys anklicken und mit Test prüfen:
 
@@ -29,10 +29,9 @@ Fish-Modell: `FISH_MODEL=s2.1-pro-free`; die Stimme wird über `FISH_VOICE_ID`
 in den Einstellungen gewählt. Die Verfügbarkeit einer Community-Stimme hängt
 von Fish Audio ab.
 
-Unterstützt: Weboberfläche, Gespräche und Bildanalyse mit OpenAI, Fish-Sprachausgabe,
+Unterstützt: Gespräche und Bildanalyse mit OpenAI, Fish-Sprachausgabe,
 Windows-Fensterliste und Screenshots, Browser öffnen, PowerShell öffnen, lokale
 Aufgaben und Erinnerungen. Die Spracheingabe erkennt Deutsch und Englisch.
-Google Chrome verwenden und Mikrofonzugriff erlauben.
 
 Jarvis verwendet sein eigenes lokales Notizbuch, Gedächtnis und seinen Kalender.
 Outlook und Google lassen sich separat in den Einstellungen verbinden.
@@ -40,21 +39,25 @@ Programmieraufträge laufen über Codex; Gespräche und Bildanalyse verwenden de
 konfigurierten OpenAI-Zugang.
 
 Beenden: Fenster schließen oder `scripts\Stop-JARVIS.ps1` ausführen. Startprobleme:
-`server.log` im Datenordner lesen (`Documents\Jarvis v5\config` im Desktop-Modus).
+`server.log` im Datenordner `Documents\Jarvis v5\config` lesen.
 
 ## Entwicklung und Validierung
 
-Voraussetzungen: Windows 10/11, Python 3.12, Node.js 22.12+, Google Chrome.
+Voraussetzungen: Windows 10/11, Node.js 22.12+; für Backend-Änderungen
+zusätzlich Docker Desktop.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-.venv\Scripts\python.exe -m pytest -q
+powershell -ExecutionPolicy Bypass -File rust\build.ps1 -Test
 ```
 
-`scripts\check-and-build.ps1` führt Tests, TypeScript-Prüfung, Vite-Build
-und den isolierten Smoke-Test `scripts\verify-source.py` aus. Die Anleitung
-für die Desktop-App steht in `docs\Jarvis-v5-Hilfe.md`.
+`rust\build.ps1` baut `rust\` nach `desktop\backend`; `-Test` führt vorher die
+Rust-Unit-Tests aus, `-Check` prüft, dass das eingecheckte Backend zur Quelle
+passt. `scripts\check-and-build.ps1` führt all das, die TypeScript-Prüfung,
+die Frontend-Tests, den Vite-Build und den isolierten Smoke-Test
+`scripts\verify-source.cjs` aus. Die Anleitung für die Desktop-App steht in
+`docs\Jarvis-v5-Hilfe.md`.
 
 Jarvis wird nicht als EXE verpackt: Smart App Control blockiert unsignierte
 Programme. Die Desktop-Verknüpfung startet deshalb Stock-Electron mit
-`desktop/` und dem venv-Python. Smart App Control nicht ändern.
+`desktop/`, das Backend läuft als WebAssembly darin. Smart App Control nicht ändern.

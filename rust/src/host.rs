@@ -61,6 +61,8 @@ extern "C" {
     fn h_read_file(path: &str) -> Option<Vec<u8>>;
     #[wasm_bindgen(js_namespace = jarvisHost, js_name = writeFile, catch)]
     fn h_write_file(path: &str, data: &[u8]) -> Result<(), JsValue>;
+    #[wasm_bindgen(js_namespace = jarvisHost, js_name = createFile)]
+    fn h_create_file(path: &str, data: &[u8]) -> String;
     #[wasm_bindgen(js_namespace = jarvisHost, js_name = appendFile, catch)]
     fn h_append_file(path: &str, data: &[u8]) -> Result<(), JsValue>;
     #[wasm_bindgen(js_namespace = jarvisHost, js_name = remove)]
@@ -78,6 +80,15 @@ extern "C" {
     fn h_run(file: &str, args: &str, options: &str) -> Promise;
     #[wasm_bindgen(js_namespace = jarvisHost, js_name = spawnDetached)]
     fn h_spawn_detached(file: &str, args: &str, options: &str) -> u32;
+    #[wasm_bindgen(js_namespace = jarvisHost, js_name = procStart, catch)]
+    fn h_proc_start(file: &str, args: &str, options: &str) -> Result<u32, JsValue>;
+    #[wasm_bindgen(js_namespace = jarvisHost, js_name = procRead)]
+    fn h_proc_read(id: u32) -> Promise;
+    #[wasm_bindgen(js_namespace = jarvisHost, js_name = procWait)]
+    fn h_proc_wait(id: u32) -> Promise;
+    #[wasm_bindgen(js_namespace = jarvisHost, js_name = procKill)]
+    fn h_proc_kill(id: u32);
+
     #[wasm_bindgen(js_namespace = jarvisHost, js_name = psSetScript)]
     fn h_ps_set_script(script: &str);
     #[wasm_bindgen(js_namespace = jarvisHost, js_name = psCall)]
@@ -367,6 +378,11 @@ pub mod fs {
     pub fn write(path: &str, data: &[u8]) -> Res<()> {
         h_write_file(path, data).map_err(js_error)
     }
+    /// Creates a new file; Err("EEXIST") when it already exists.
+    pub fn create_new(path: &str, data: &[u8]) -> Res<()> {
+        let error = h_create_file(path, data);
+        if error.is_empty() { Ok(()) } else { Err(error) }
+    }
     pub fn write_text(path: &str, text: &str) -> Res<()> {
         write(path, text.as_bytes())
     }
@@ -404,6 +420,7 @@ pub mod fs {
         pub name: String,
         pub dir: bool,
         pub file: bool,
+        pub link: bool,
     }
     pub fn list_dir(path: &str) -> Vec<Entry> {
         let Some(raw) = h_list_dir(path) else { return Vec::new() };
@@ -413,6 +430,7 @@ pub mod fs {
                 name: r["name"].as_str().unwrap_or_default().to_string(),
                 dir: r["dir"].as_bool().unwrap_or(false),
                 file: r["file"].as_bool().unwrap_or(false) || r["link"].as_bool().unwrap_or(false),
+                link: r["link"].as_bool().unwrap_or(false),
             })
             .collect()
     }
@@ -460,6 +478,27 @@ pub async fn run(file: &str, args: &[&str], options: Value) -> RunOutput {
 pub fn spawn_detached(file: &str, args: &[&str], options: Value) -> bool {
     let args = serde_json::to_string(args).unwrap_or_default();
     h_spawn_detached(file, &args, &options.to_string()) != 0
+}
+
+/// A running child process whose stdout is read as it arrives.
+pub struct Proc(u32);
+
+impl Proc {
+    pub fn start(file: &str, args: &[&str], options: Value) -> Res<Self> {
+        let args = serde_json::to_string(args).unwrap_or_default();
+        h_proc_start(file, &args, &options.to_string()).map(Proc).map_err(js_error)
+    }
+    /// Next stdout chunk; None at the end of the output.
+    pub async fn read(&self) -> Option<String> {
+        wait(h_proc_read(self.0)).await.ok().and_then(|v| v.as_string())
+    }
+    pub async fn wait(&self) -> i32 {
+        wait(h_proc_wait(self.0)).await.ok().and_then(|v| v.as_f64()).unwrap_or(-1.0) as i32
+    }
+    /// Ends the whole process tree.
+    pub fn kill(&self) {
+        h_proc_kill(self.0);
+    }
 }
 
 /// Starts a document, folder or URL with its Windows default handler.

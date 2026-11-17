@@ -64,6 +64,15 @@ $HANDLERS = @{
     if ($null -eq $c) { $null } else { @{ user = $c[0]; secret = $c[1] } } }
   'cred.write' = { param($a) [JarvisCred]::Write([string]$a.target, [string]$a.user, [string]$a.secret); $true }
   'cred.delete' = { param($a) [JarvisCred]::Delete([string]$a.target) }
+  # Current-user DPAPI; compatible with win32crypt.CryptProtectData(flags 0).
+  'dpapi.protect' = { param($a)
+    Add-Type -AssemblyName System.Security
+    [Convert]::ToBase64String([Security.Cryptography.ProtectedData]::Protect(
+      [Convert]::FromBase64String([string]$a.data), $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)) }
+  'dpapi.unprotect' = { param($a)
+    Add-Type -AssemblyName System.Security
+    [Convert]::ToBase64String([Security.Cryptography.ProtectedData]::Unprotect(
+      [Convert]::FromBase64String([string]$a.data), $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)) }
 }
 #EXTRA_HANDLERS#
 
@@ -88,6 +97,6 @@ while ($true) {
 
 /// The full script with the handler modules of the other Rust files.
 pub fn script() -> String {
-    let extra = [crate::desktop::PS_HANDLERS].join("\n");
+    let extra = [crate::desktop::PS_HANDLERS, crate::uia::PS_HANDLERS, crate::whatsapp::PS_HANDLERS].join("\n");
     BRIDGE_SCRIPT.replace("#EXTRA_HANDLERS#", &extra)
 }

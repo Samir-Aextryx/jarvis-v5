@@ -87,7 +87,7 @@ pub fn available() -> bool {
 pub async fn load() {
     let service = service_name();
     let mut ok = true;
-    for name in SECURE_KEY_NAMES {
+    for name in SECURE_KEY_NAMES.iter() {
         match get_password(&service, name).await {
             Ok(Some(value)) if !value.trim().is_empty() => {
                 CACHE.with(|c| c.borrow_mut().insert(name.to_string(), value.trim().to_string()));

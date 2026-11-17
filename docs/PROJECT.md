@@ -3,8 +3,8 @@
 > **Historical plan (Jarvis v4 era).** This document records the original
 > milestone plan; it is not a description of the current codebase. Module names
 > such as `server.py`, `autonomous_tasks.py` and `email_planner.py` at the
-> repository root no longer exist — today's code lives under `jarvis/` (for
-> example `jarvis/automation/local_pc.py` and `jarvis/integrations/`). The
+> repository root no longer exist — today's backend is Rust under `rust/src/` (for
+> example `local_pc.rs`, `email.rs` and `outlook.rs`). The
 > safety rules it describes (no automatic sending, visual draft review) still
 > apply.
 

@@ -590,7 +590,7 @@ html, body {
 .voice-only-badge { flex:none; margin-left:auto; padding:5px 8px; color:#a7e4e7; border:1px solid rgba(117,208,216,.2); border-radius:999px; background:rgba(73,150,160,.12); font-size:8px; font-weight:700; letter-spacing:1px; }
 #section-agent h3:not(:first-child) { margin:23px 0 10px; padding-top:16px; border-top:1px solid rgba(145,189,200,.1); }
 #section-agent label:has(input[type="checkbox"]) { display:flex; align-items:center; gap:4px; margin:12px 0; color:#c1d4d8; font-size:12px; }
-#section-agent #jev-status, #section-agent #agent-status, #section-voice-automation [role="status"], #google-status, #google-key-status { padding:9px 11px; border:1px solid rgba(145,189,200,.12); border-radius:9px; background:rgba(3,9,14,.36); }
+#section-agent #agent-status, #section-voice-automation [role="status"], #google-status, #google-key-status { padding:9px 11px; border:1px solid rgba(145,189,200,.12); border-radius:9px; background:rgba(3,9,14,.36); }
 #section-voice-automation pre { padding:12px; border:1px solid rgba(145,189,200,.12); border-radius:9px; background:rgba(3,9,14,.5); color:#b6d6da; }
 .google-buttons { gap:8px; }
 .google-services { gap:7px; }

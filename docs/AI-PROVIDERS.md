@@ -31,8 +31,7 @@ Requests übernehmen die gespeicherte Auswahl; kein Neustart ist erforderlich.
 Fish Audio und die ausgewählte Jarvis-Stimme bleiben erhalten. Mikrofon-STT
 verwendet weiterhin OpenAI; dessen API-Schlüssel ist dafür auch bei Auswahl
 von Gemini oder Grok erforderlich. Google-Konto-OAuth für Gmail/Kalender ist
-von einem Gemini-API-Schlüssel unabhängig. Jev bleibt ein optionaler eigener
-Routing-Dienst. Codex-/ChatGPT-/Claude-App-Prompts bleiben Desktopfunktionen.
+von einem Gemini-API-Schlüssel unabhängig. Codex-/ChatGPT-/Claude-App-Prompts bleiben Desktopfunktionen.
 
 Es erfolgt kein automatischer Wechsel zu einem anderen Anbieter bei Fehlern.
 Das vermeidet überraschende Kosten und das Senden des Kontexts an einen
@@ -40,8 +39,8 @@ nicht ausgewählten Dienst. Bestehende lokale Befehle umgehen die KI weiterhin.
 
 ## Umsetzung und Zugangsdaten
 
-- `llm_providers.py`: feste offizielle HTTPS-Endpunkte, eigene Key-/Modellnamen.
-- `llm_client.py`: bestehende OpenAI Responses API; Gemini und Grok über
+- `rust/src/settings.rs`: feste offizielle HTTPS-Endpunkte, eigene Key-/Modellnamen.
+- `rust/src/llm.rs`: bestehende OpenAI Responses API; Gemini und Grok über
   Chat Completions. Einheitliches Text-/Nutzungsformat, Bild- und JSON-Schema-
   Unterstützung, sofortiges SSE-Streaming und Abbruch beim Stoppen.
 - API-Schlüssel: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `XAI_API_KEY`, `OLLAMA_API_KEY`.
@@ -75,7 +74,7 @@ abgeschlossen werden. Sie darf nicht als bestanden gewertet werden.
 
 ## Windows-Start
 
-Jarvis läuft direkt aus dem Quellcode (Electron + Python im `.venv`). Es gibt
+Jarvis läuft direkt aus dem Quellcode (Electron mit dem Rust-Backend als WebAssembly). Es gibt
 keine eigene, unsignierte EXE mehr, die Smart App Control blockieren könnte.
 
 ## Offizielle Quellen

@@ -7,12 +7,6 @@ node_modules/
 .venv/
 venv/
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.pytest_cache/
-
 # Data (user-specific, generated at runtime)
 *.db
 data/*.jsonl
@@ -76,7 +70,6 @@ backup-updates/
 
 /backup-archive-verified.json
 /browser-install.log
-/jev-tests.txt
 /refactor-tests.txt
 /pytest-results.txt
 

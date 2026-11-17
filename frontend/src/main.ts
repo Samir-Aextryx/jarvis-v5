@@ -5,8 +5,7 @@
  * speech recognition, and audio playback into a single experience.
  */
 
-import { type OrbState } from "./orb";
-import { createBackground } from "./background";
+import { createOrb, type OrbState } from "./orb";
 import { createVoiceInput, createAudioPlayer } from "./voice";
 import { createSocket } from "./ws";
 import { openSettings, closeSettings, checkFirstTimeSetup, isSettingsOpen } from "./settings";
@@ -170,7 +169,7 @@ function updateStatus(state: State) {
 // ---------------------------------------------------------------------------
 
 const canvas = document.getElementById("orb-canvas") as HTMLCanvasElement;
-const orb = createBackground(canvas);
+const orb = createOrb(canvas);
 window.addEventListener('beforeunload', () => orb.destroy());
 const desktopBridge = (window as Window & {jarvisDesktop?: {
   getAuthToken?(): string;

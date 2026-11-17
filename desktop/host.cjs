@@ -185,6 +185,11 @@ const host = {
     fs.writeFileSync(temp, bytes(data));
     fs.renameSync(temp, file);
   },
+  // Exclusive creation: never overwrites and never follows an existing link.
+  createFile(file, data) {
+    try { fs.writeFileSync(file, bytes(data), { flag: 'wx' }); return ''; }
+    catch (e) { return e.code === 'EEXIST' ? 'EEXIST' : (e.message || 'write failed'); }
+  },
   appendFile(file, data) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.appendFileSync(file, bytes(data)); },
   remove(file) { try { fs.rmSync(file, { force: true }); return true; } catch { return false; } },
   rename(from, to) { fs.renameSync(from, to); },
@@ -232,6 +237,34 @@ const host = {
       child.unref();
       return child.pid || 0;
     } catch { return 0; }
+  },
+
+  // Long-running child with streamed UTF-8 stdout; stdin is written once and closed.
+  procStart(file, argsJson, optionsJson) {
+    const options = JSON.parse(optionsJson || '{}');
+    const entry = { child: null, inbox: null, exited: null };
+    entry.inbox = new Inbox(() => entry.child?.stdout.isPaused() && entry.child.stdout.resume());
+    entry.exited = new Promise(resolve => { entry.resolveExit = resolve; });
+    const child = spawn(file, JSON.parse(argsJson), { cwd: options.cwd, env: childEnv(options.env), windowsHide: true,
+      stdio: ['pipe', 'pipe', 'ignore'] });
+    entry.child = child;
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', data => { entry.inbox.push(data); if (entry.inbox.items.length > 64) child.stdout.pause(); });
+    child.on('error', () => { entry.inbox.end(); entry.resolveExit(-1); });
+    child.on('close', code => { entry.inbox.end(); entry.resolveExit(code ?? -1); });
+    child.stdin.on('error', () => {});
+    child.stdin.end(options.stdin || undefined);
+    return keep(entry);
+  },
+  procRead(id) { const entry = handles.get(id); return entry ? entry.inbox.next() : Promise.resolve(null); },
+  async procWait(id) { const entry = handles.get(id); if (!entry) return -1; const code = await entry.exited; handles.delete(id); return code; },
+  procKill(id) {
+    const entry = handles.get(id);
+    if (!entry || entry.child.exitCode !== null || !entry.child.pid) return;
+    const killer = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'taskkill.exe');
+    const k = spawn(killer, ['/PID', String(entry.child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+    k.on('error', () => { try { entry.child.kill(); } catch {} });
+    k.on('close', () => { if (entry.child.exitCode === null) try { entry.child.kill(); } catch {} });
   },
 
   // One long-lived PowerShell process for Win32/COM/UI Automation calls.

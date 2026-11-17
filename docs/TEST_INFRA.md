@@ -1,40 +1,45 @@
 # Test infrastructure
 
-Jarvis v5 uses one pytest suite in `tests/`. There is no separate `tests/e2e`
-tree; slow and opt-in checks live in `benchmarks/` and `scripts/verify-*.py`.
+Jarvis v5 has three layers of checks. All of them run without personal data or
+real provider keys.
 
-## Running
+## Rust unit tests
 
 ```powershell
-.venv\Scripts\python.exe -m pytest -q
+rust\build.ps1 -Test
 ```
 
-`tests/conftest.py` redirects `JARVIS_DATA_DIR` to a disposable temporary
-directory and installs an in-memory credential vault, so a normal test run
-never touches the user's real memory database, `.env` or Windows Credential
-Manager. Do not import `jarvis.server` before that fixture has run.
+`cargo test --lib` runs natively inside the Docker build container. The tests
+sit next to the code they check (`#[cfg(test)] mod tests` in `rust/src/*.rs`)
+and cover the pure logic that carries Jarvis's safety rules:
 
-## Coverage areas
+- Recipient and draft handling: mail commands, explicit send detection,
+  draft-field validation, Outlook/Gmail address checks
+- App identity: app resolution, aliases and full-word matching
+- Voice routing: transcript guards, call-request and urgent-mail parsing
+- Personal data: urgent-mail state migration, WhatsApp contact normalization,
+  Atlassian output parsing
 
-- Authentication and HTTP boundary: `test_http_auth.py`, `test_refactor_security.py`
-- Voice pipeline, barge-in and cancellation: `test_audio_suppression.py`,
-  `test_call_*.py`, `test_direct_voice_routing.py`, `test_e2e_pipeline.py`
-- Personal data: `test_custom_personal.py`, memory/calendar tests
-- Integrations: Google, Outlook, Atlassian, Planner, provider settings
-- Automation and desktop actions: `test_desktop_agent.py`, `test_pc_control.py`,
-  `test_app_launcher.py`, autonomy and task tests
-- Frontend/Electron helpers: `tests/*.cjs` under Node
+Code that needs the Windows host (sockets, files, PowerShell bridge, COM, UI
+Automation) is not unit-tested; the smoke checks below exercise it.
 
-## Gates
+## Frontend checks
 
-`scripts/check-and-build.ps1` runs pytest, `tsc`, the Vite build and
-`scripts/verify-source.py`. The smoke check starts the backend from source, as the
-desktop shell does, with a temporary data profile on port 8346, verifies health, 401 handling, bearer auth,
-static assets, settings, memory and calendar, and deletes the disposable test
-credential afterwards. It makes no external API calls.
+`tests/*.cjs` are plain Node scripts for the voice-activity, PCM capture and
+playback, streaming and orb modules. `scripts/check-and-build.ps1` runs each
+of them, plus `tsc` and the Vite build.
 
-## Expectations
+## Backend smoke check
 
-- No test may send messages or change connected account data.
-- No test may read, print or commit real API keys or personal records.
-- Browser/Playwright checks are optional and need `python -m playwright install chromium`.
+`scripts/verify-source.cjs` loads the built WebAssembly backend with
+`desktop/host.cjs` exactly as Electron does, but against a disposable data
+folder. It checks authentication, assets, settings, memory and the calendar,
+then removes the temporary auth token from Windows Credential Manager.
+
+`scripts/check-and-build.ps1` runs the Rust tests, the reproducible-build
+check, the frontend checks and this smoke check in that order.
+
+## Not covered automatically
+
+Google sign-in, Outlook drafts and sending, and the WhatsApp Beta contact-card
+check act on real accounts or apps and are verified by hand.

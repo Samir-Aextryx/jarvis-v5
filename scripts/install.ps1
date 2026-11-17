@@ -1,19 +1,13 @@
-﻿# Sets Jarvis up from source: Python venv, frontend build, stock Electron and a
-# desktop shortcut. Nothing is compiled into an own .exe, so Smart App Control
-# can stay on. Running it again updates dependencies and repairs the shortcut.
+﻿# Sets Jarvis up from source: frontend build, stock Electron and a desktop
+# shortcut. The backend is Rust compiled to WebAssembly and committed in
+# desktop\backend, so no Python, Rust or own .exe is needed and Smart App
+# Control can stay on. Running it again updates dependencies and repairs the shortcut.
 param([switch]$NoShortcut)
 $ErrorActionPreference = 'Stop'
 $jarvisRepoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $jarvisRepoRoot
 try {
-    $jarvisPython = Join-Path $jarvisRepoRoot '.venv\Scripts\python.exe'
-    if (-not (Test-Path -LiteralPath $jarvisPython)) {
-        if (Get-Command py -ErrorAction SilentlyContinue) { & py -3.12 -m venv .venv } else { & python -m venv .venv }
-        if ($LASTEXITCODE -ne 0) { throw 'Python 3.12 fehlt. Bitte von python.org installieren und das Skript erneut starten.' }
-    }
-    & $jarvisPython -m pip install --disable-pip-version-check --quiet -r requirements.txt
-    if ($LASTEXITCODE -ne 0) { throw 'Python-Abhängigkeiten konnten nicht installiert werden.' }
-
+    if (-not (Test-Path -LiteralPath (Join-Path $jarvisRepoRoot 'desktop\backend\jarvis_bg.wasm'))) { throw 'Das Backend (desktop\backend) fehlt im Checkout.' }
     if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw 'Node.js 22 oder neuer fehlt. Bitte von nodejs.org installieren.' }
     & npm ci --prefix frontend --no-fund --no-audit
     if ($LASTEXITCODE -ne 0) { throw 'Frontend-Abhängigkeiten konnten nicht installiert werden.' }

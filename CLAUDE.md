@@ -4,7 +4,7 @@ Jarvis v5 is a Windows desktop voice assistant. The UI is voice-first: users spe
 
 ## Architecture
 
-- Backend: Python 3.12, FastAPI and WebSockets under `jarvis/`.
+- Backend: Rust under `rust/src/`, compiled to WebAssembly (`desktop/backend/`, committed) and run inside stock Electron. `desktop/host.cjs` provides sockets, files, processes and a PowerShell bridge for Win32, COM and UI Automation.
 - Voice input: Windows microphone audio, streaming speech recognition and interrupt handling.
 - Responses: OpenAI Responses API; default model `gpt-6-luna`, reasoning effort `low`.
 - Speech output: Fish Audio.
@@ -20,5 +20,5 @@ Jarvis v5 is a Windows desktop voice assistant. The UI is voice-first: users spe
 - Do not send messages or modify connected account data unless the user explicitly asked.
 - Keep API credentials in Windows Credential Manager.
 - Windows is the only supported runtime platform. Do not add macOS or Linux branches or integrations.
-- Jarvis runs only from source: stock Electron starts `desktop/`, which starts the backend with the venv Python; user data stays in `Documents\Jarvis v5\config`. Source changes are live after restarting Jarvis. `scripts/install.ps1` sets up the venv, frontend build, Electron and the desktop shortcut. Do not add an own packaged or compiled executable: Smart App Control blocks unsigned executables, and it must never be changed.
+- Jarvis runs only from source: stock Electron starts `desktop/`, which loads the WebAssembly backend; user data stays in `Documents\Jarvis v5\config`. Backend changes need `rust/build.ps1` (Docker) and a restart; `rust/build.ps1 -Test` runs the Rust unit tests. `scripts/install.ps1` sets up the frontend build, Electron and the desktop shortcut. Do not add an own packaged or compiled executable: Smart App Control blocks unsigned executables, and it must never be changed.
 - Keep responses concise and in English.

@@ -22,13 +22,12 @@ Thanks for your interest in contributing! Here's how to get involved.
 
 ## Code Style
 
-`server.py` still owns application composition and shared runtime state. Routers
-use it as a compatibility bridge; extracting more services is welcome, but keep
-the voice loop working.
+The backend is Rust under `rust/src/`, compiled to WebAssembly and run inside
+Electron (see README). Keep the voice loop working.
 
 - Keep voice responses short (1-2 sentences max)
 - Don't add dependencies unless necessary
-- Run `.venv\Scripts\python.exe -m pytest -q`, `tsc` and the Vite build before a PR
+- Run `scripts\check-and-build.ps1` (Rust tests, reproducible build, `tsc`, frontend checks and build, smoke check) before a PR
 - Keep the personality consistent — British butler, dry wit, economy of language
 - Windows is the only supported runtime platform
 
@@ -45,7 +44,7 @@ the voice loop working.
 Open an issue with:
 - What you expected to happen
 - What actually happened
-- Your Windows and Python version
+- Your Windows and Node.js version
 - Any error messages from the terminal
 
 ## Questions?

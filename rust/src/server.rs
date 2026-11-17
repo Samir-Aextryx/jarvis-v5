@@ -143,6 +143,10 @@ async fn handle(request: Request) -> Response {
                 request.header("access-control-request-headers").unwrap_or("authorization, content-type"),
             )
             .with_header("Access-Control-Max-Age", "600")
+    } else if request.method == "GET" && path == "/" && crate::google::is_callback(request.query_param("state").as_deref()) {
+        // Google's loopback redirect after sign-in; the one-time state is the credential.
+        let page = crate::google::finish_login(request.query_param("code"), request.query_param("error")).await;
+        Response::html(200, page)
     } else if !is_exempt(&path) && !bearer_ok(&request) {
         Response::error(401, "Unauthorized — pass 'Authorization: Bearer <token>'")
     } else {
