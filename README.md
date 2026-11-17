@@ -1,8 +1,28 @@
 # Jarvis v5
 
-Windows desktop voice assistant with OpenAI, Gemini, Grok or Ollama Cloud (GPT-OSS 120B), Fish Audio, local memory/calendar/notes, Google integration and verified desktop actions.
+**A voice-first AI assistant for your Windows PC.** You speak, Jarvis listens, acts and answers out loud. It remembers what matters to you, keeps your calendar and notes, works with your email, opens apps and websites, and carries out desktop tasks, with every action checked before it runs.
 
-Jarvis v5 runs straight from source: stock Electron opens the interface and runs the backend, which is written in Rust and compiled to WebAssembly (`desktop/backend`, committed). There is no installer and no packaged `.exe`, so it also starts with Windows Smart App Control turned on.
+## What Jarvis can do
+
+- **Talk naturally.** Streaming speech recognition, a natural voice from Fish Audio and short spoken replies. Interrupt Jarvis at any moment and it stops talking and listens.
+- **Choose your AI.** OpenAI, Google Gemini, xAI Grok or Ollama Cloud (GPT-OSS 120B for the fastest replies). Clear requests skip the AI entirely and run on a fast local path.
+- **Remember and organize.** Personal memory, calendar and notes live in local SQLite databases on your PC.
+- **Handle email.** Read, search and draft in Gmail and Classic Outlook. Jarvis sends only when you explicitly ask, and it alerts you to new urgent mail.
+- **Use your Google account.** Calendar, Gmail, Contacts, Drive and Tasks, connected with your own sign-in.
+- **Open apps and websites.** Launch installed apps and sites by voice; Jarvis learns the names you use.
+- **Control the desktop.** Files, drives and Microsoft Defender scans, plus multi-step tasks in Windows apps through UI Automation.
+- **Hand off coding work.** Send coding tasks to the Codex app and get spoken updates when they finish.
+
+## Safe by design
+
+- **Nothing is sent without you.** Messages go out and account data changes only on an explicit request, after recipient and app-identity checks. Existing drafts are never overwritten.
+- **Content stays content.** Text in emails, web pages or apps never becomes a command, and speech is never run through a shell.
+- **Your keys and data stay local.** API keys are stored in Windows Credential Manager; personal data stays in `Documents\Jarvis v5\config`, outside the source tree.
+- **Locked-down local API.** All API calls beyond a health check need a local auth token, and WebSockets never carry it in the URL.
+
+## How it runs
+
+Jarvis v5 runs straight from source. Stock Electron opens the interface and runs the backend, which is written in Rust and compiled to WebAssembly (`desktop/backend`, committed). There is no installer and no packaged `.exe`, so Jarvis also starts with Windows Smart App Control turned on.
 
 ## Install and start
 
