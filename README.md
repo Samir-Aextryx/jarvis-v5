@@ -42,11 +42,10 @@ Personal data (`.env`, databases, `MEMORY.md`) is runtime data, excluded from Gi
 
 See [the user guide](docs/Jarvis-v5-Hilfe.md), [Windows setup](docs/WINDOWS-SETUP.md), [AI providers](docs/AI-PROVIDERS.md) and [the contributing guide](docs/CONTRIBUTING.md).
 
-## ESP32 companion project and demo
+## ESP32 companion project
 
 - [sketch.ino](sketch.ino): Arduino sketch for the ESP32 companion project
 - [ESP32-Praesentation/](ESP32-Praesentation): project presentation
-- [solar-system/](solar-system): small browser demo
 
 ## License
 

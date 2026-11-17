@@ -63,7 +63,7 @@ committed `desktop/backend/` matches the source.
 
 ## Behavior changes made on `main` that the port must keep
 - God's Eye View removed (no map commands, no map window).
-- The solar-system background is removed again (particles orb only).
+- The solar-system background and its demo folder are removed (particles orb only).
 - Ollama default model `gpt-oss:120b`; for `gpt-oss*` models the reasoning
   level is never `none` (minimum `low`), and Ollama requests that reason get
   +1024 `max_tokens` (done in `llm.rs`).
