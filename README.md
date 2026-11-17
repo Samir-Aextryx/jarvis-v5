@@ -42,11 +42,6 @@ Personal data (`.env`, databases, `MEMORY.md`) is runtime data, excluded from Gi
 
 See [the user guide](docs/Jarvis-v5-Hilfe.md), [Windows setup](docs/WINDOWS-SETUP.md), [AI providers](docs/AI-PROVIDERS.md) and [the contributing guide](docs/CONTRIBUTING.md).
 
-## ESP32 companion project
-
-- [sketch.ino](sketch.ino): Arduino sketch for the ESP32 companion project
-- [ESP32-Praesentation/](ESP32-Praesentation): project presentation
-
 ## License
 
 Jarvis v5 is a modified version of JARVIS by Ethan Rogers. The source is public, but the [license](LICENSE) only allows personal, educational and non-commercial use; commercial use needs a license from the original author. It is therefore source-available, not an OSI-approved open-source license.
