@@ -7,14 +7,16 @@ WebAssembly kompiliert und liegt fertig in `desktop\backend`.
 Start: Desktop-Verknüpfung **Jarvis v5** oder `scripts\Start-JARVIS.cmd`.
 Der Server lauscht nur auf `127.0.0.1`, Port **8345**.
 
-In Settings folgende Werte eintragen, Save Keys anklicken und mit Test prüfen:
+Beim ersten Start fragt der Einrichtungsassistent diese Werte ab. Später unter
+Settings → API keys eintragen, mit Save speichern und mit Test prüfen
+(die Voice ID steht unter Settings → Voice):
 
 - OpenAI API Key: https://platform.openai.com/api-keys
 - Fish Audio API Key: https://fish.audio/app/api-keys/
 - Fish Voice ID: eigene Stimme aus dem Fish-Audio-Konto (siehe unten)
 
 API-Schlüssel und Stimmen-ID sind verschiedene Werte. Schlüssel werden im
-**Windows Credential Manager** gespeichert und nach Save Keys sofort aktiv.
+**Windows Credential Manager** gespeichert und nach Save sofort aktiv.
 Die `.env` enthält nur nicht-geheime Einstellungen. Schlüssel niemals im Chat
 posten oder in Git einchecken. Test erzeugt eine kleine API-Anfrage.
 

@@ -112,5 +112,8 @@ pub fn port() -> u16 {
     get("JARVIS_PORT").and_then(|p| p.trim().parse().ok()).unwrap_or(8340)
 }
 pub fn user_name() -> String {
-    get_or("USER_NAME", "sir")
+    // Empty or the old `.env.example` placeholder means no name was given.
+    let name = get_or("USER_NAME", "");
+    let name = name.trim();
+    if name.is_empty() || name == "your-name" { "sir".into() } else { name.into() }
 }

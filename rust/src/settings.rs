@@ -18,13 +18,15 @@ pub struct Provider {
     pub endpoint: &'static str,
 }
 
-pub const PROVIDERS: [Provider; 4] = [
+pub const PROVIDERS: [Provider; 5] = [
     Provider { id: "openai", label: "OpenAI", key_name: "OPENAI_API_KEY", model_variable: "OPENAI_MODEL", default_model: "gpt-6-luna", endpoint: "https://api.openai.com/v1/responses" },
     Provider { id: "gemini", label: "Gemini", key_name: "GEMINI_API_KEY", model_variable: "GEMINI_MODEL", default_model: "gemini-3.8-flash", endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions" },
     Provider { id: "grok", label: "Grok", key_name: "XAI_API_KEY", model_variable: "GROK_MODEL", default_model: "grok-4.7", endpoint: "https://api.x.ai/v1/chat/completions" },
     Provider { id: "ollama", label: "Ollama Cloud", key_name: "OLLAMA_API_KEY", model_variable: "OLLAMA_MODEL", default_model: "gpt-oss:120b", endpoint: "https://ollama.com/v1/chat/completions" },
+    // Runs on this PC through Ollama; needs no key, only a downloaded model.
+    Provider { id: "local", label: "Local AI", key_name: "", model_variable: "LOCAL_MODEL", default_model: "", endpoint: "http://127.0.0.1:11434/v1/chat/completions" },
 ];
-pub const PROVIDER_CHOICE_ERROR: &str = "Choose OpenAI, Gemini, Grok or Ollama Cloud as the AI provider.";
+pub const PROVIDER_CHOICE_ERROR: &str = "Choose OpenAI, Gemini, Grok, Ollama Cloud or Local AI as the AI provider.";
 
 /// Resolves a supported provider; never silently falls back or changes destination.
 pub fn provider_config(name: Option<&str>) -> Res<&'static Provider> {
@@ -45,7 +47,23 @@ pub fn validate_model(model: &str) -> Res<String> {
 }
 
 pub fn provider_model(provider: &Provider) -> Res<String> {
-    validate_model(&config::get_or(provider.model_variable, provider.default_model))
+    let model = config::get_or(provider.model_variable, provider.default_model);
+    if provider.id == "local" {
+        if model.trim().is_empty() {
+            return Err("Choose a local AI model in Settings.".into());
+        }
+        return crate::local_ai::validate_model(&model);
+    }
+    validate_model(&model)
+}
+
+/// Whether the provider can answer: a saved key, or for Local AI a chosen model.
+pub fn provider_ready(provider: &Provider) -> bool {
+    if provider.id == "local" {
+        provider_model(provider).is_ok()
+    } else {
+        !vault::get(provider.key_name).is_empty()
+    }
 }
 
 pub fn apply_provider_settings(settings: &Value) {
@@ -54,6 +72,7 @@ pub fn apply_provider_settings(settings: &Value) {
     config::set("GEMINI_MODEL", settings["gemini_model"].as_str().unwrap_or(PROVIDERS[1].default_model));
     config::set("GROK_MODEL", settings["grok_model"].as_str().unwrap_or(PROVIDERS[2].default_model));
     config::set("OLLAMA_MODEL", settings["ollama_model"].as_str().unwrap_or(PROVIDERS[3].default_model));
+    config::set("LOCAL_MODEL", settings["local_model"].as_str().unwrap_or(""));
     config::set("OPENAI_REASONING_EFFORT", settings["reasoning_effort"].as_str().unwrap_or("low"));
 }
 
@@ -64,7 +83,7 @@ pub fn provider_status() -> Value {
         .iter()
         .map(|p| {
             json!({ "id": p.id, "name": p.label, "model": provider_model(p).unwrap_or_else(|_| p.default_model.into()),
-                    "configured": !vault::get(p.key_name).is_empty() })
+                    "configured": provider_ready(p), "local": p.id == "local" })
         })
         .collect();
     let selected = choices.iter().find(|c| c["id"] == active).cloned().unwrap_or(Value::Null);
@@ -85,6 +104,8 @@ pub fn defaults() -> Map<String, Value> {
     m.insert("gemini_model".into(), json!(config::get_or("GEMINI_MODEL", PROVIDERS[1].default_model)));
     m.insert("grok_model".into(), json!(config::get_or("GROK_MODEL", PROVIDERS[2].default_model)));
     m.insert("ollama_model".into(), json!(config::get_or("OLLAMA_MODEL", PROVIDERS[3].default_model)));
+    m.insert("local_model".into(), json!(config::get_or("LOCAL_MODEL", "")));
+    m.insert("setup_done".into(), json!(false));
     m.insert("reasoning_effort".into(), json!(config::get_or("OPENAI_REASONING_EFFORT", "low")));
     m.insert("default_email".into(), json!("Gmail"));
     m
@@ -127,7 +148,13 @@ pub fn validated(data: &Map<String, Value>) -> Res<Map<String, Value>> {
         }
         data.insert("work_apps".into(), json!(unique));
     }
-    for name in ["automation", "activity_log"] {
+    if let Some(m) = data.get("local_model") {
+        let m = m.as_str().ok_or("Choose a valid local model.")?;
+        if !m.is_empty() {
+            crate::local_ai::validate_model(m)?;
+        }
+    }
+    for name in ["automation", "activity_log", "setup_done"] {
         if data.get(name).is_some_and(|v| !v.is_boolean()) {
             return Err("Use a checkbox for this setting.".into());
         }
@@ -403,7 +430,10 @@ pub fn usage_summary() -> String {
 pub const DEFAULT_FISH_VOICE_ID: &str = "612b878b113047d9a770c069c8b4fdfe";
 
 pub fn fish_voice_id() -> String {
-    config::get_or("FISH_VOICE_ID", DEFAULT_FISH_VOICE_ID)
+    // Empty or the old `.env.example` placeholder means the Jarvis voice.
+    let id = config::get_or("FISH_VOICE_ID", "");
+    let id = id.trim();
+    if id.is_empty() || id.starts_with("your-") { DEFAULT_FISH_VOICE_ID.into() } else { id.into() }
 }
 pub fn fish_model() -> String {
     config::get_or("FISH_MODEL", "s2.1-pro-free")

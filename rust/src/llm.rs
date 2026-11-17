@@ -28,6 +28,33 @@ impl<'a> Request<'a> {
     }
 }
 
+/// Reasoning for a local model. "none" is accepted by every Ollama model;
+/// naming a level for a model without a thinking mode is an error there.
+pub fn local_reasoning(model: &str, effort: &str, thinks: Option<bool>) -> (&'static str, bool) {
+    let level = match effort {
+        "medium" => "medium",
+        "high" | "xhigh" | "max" => "high",
+        _ => "low",
+    };
+    if model.to_ascii_lowercase().contains("gpt-oss") {
+        // GPT-OSS always reasons; "low" is its fastest level.
+        return (level, true);
+    }
+    match thinks {
+        // Spoken replies stay quick: low effort answers without a thinking pass.
+        Some(true) if level != "low" => (level, true),
+        _ => ("none", false),
+    }
+}
+
+fn provider_error(provider: &Provider, status: u16) -> String {
+    if provider.id == "local" {
+        format!("Local AI answered HTTP {status}; check that the model is downloaded and fits in memory.")
+    } else {
+        format!("{} API HTTP {status}; check key, model and API credit.", provider.label)
+    }
+}
+
 pub fn user_msg(text: &str) -> Value {
     json!({ "role": "user", "content": text })
 }
@@ -35,10 +62,15 @@ pub fn user_msg(text: &str) -> Value {
 impl Llm {
     pub fn new(provider: Option<&str>, key: Option<String>) -> Res<Self> {
         let provider = provider_config(provider)?;
-        let key = key.unwrap_or_else(|| vault::get(provider.key_name));
+        let key = if provider.id == "local" {
+            // Ollama on 127.0.0.1 takes no key; a chosen model makes it ready.
+            if settings::provider_ready(provider) { "local".to_string() } else { String::new() }
+        } else {
+            key.unwrap_or_else(|| vault::get(provider.key_name))
+        };
         Ok(Self { provider, key })
     }
-    /// The selected provider, if its key is configured.
+    /// The selected provider, if its key (or for Local AI its model) is configured.
     pub fn active() -> Option<Self> {
         Self::new(None, None).ok().filter(|c| !c.key.is_empty())
     }
@@ -47,9 +79,28 @@ impl Llm {
     }
     fn require_key(&self) -> Res<()> {
         if self.key.is_empty() {
+            if self.provider.id == "local" {
+                return Err("Choose a local AI model in Settings.".into());
+            }
             return Err(format!("{} API key is missing. Add it in Settings.", self.provider.label));
         }
         Ok(())
+    }
+    /// Local AI: Ollama is started when needed and the model's thinking mode is known.
+    async fn prepare(&self, req: &Request<'_>) -> Res<()> {
+        if self.provider.id == "local" {
+            let model = match req.model {
+                Some(m) => crate::local_ai::validate_model(m)?,
+                None => provider_model(self.provider)?,
+            };
+            crate::local_ai::prepare(&model).await?;
+        }
+        Ok(())
+    }
+    fn send_to(&self) -> Http {
+        let request = Http::post(self.provider.endpoint);
+        // A local model may load from disk first; cloud providers answer sooner.
+        if self.provider.id == "local" { request.timeout(180.0) } else { request.bearer(&self.key).timeout(90.0) }
     }
 
     fn inputs(messages: &[Value], chat: bool) -> Res<Vec<Value>> {
@@ -88,12 +139,19 @@ impl Llm {
             inputs.insert(0, json!({ "role": "system", "content": req.system }));
         }
         let model = match req.model {
+            Some(m) if self.provider.id == "local" => crate::local_ai::validate_model(m)?,
             Some(m) => validate_model(m)?,
             None => provider_model(self.provider)?,
         };
         let mut payload = json!({ "model": model, "messages": inputs, "max_tokens": req.max_tokens.max(16) });
         let effort = config::get_or("OPENAI_REASONING_EFFORT", "low");
-        if self.provider.id == "gemini" {
+        if self.provider.id == "local" {
+            let (mapped, thinking) = local_reasoning(&model, &effort, crate::local_ai::thinks(&model));
+            payload["reasoning_effort"] = json!(mapped);
+            if thinking {
+                payload["max_tokens"] = json!(req.max_tokens.max(16) + 1024);
+            }
+        } else if self.provider.id == "gemini" {
             payload["reasoning_effort"] = json!(if ["minimal", "low", "medium", "high"].contains(&effort.as_str()) { effort.as_str() } else { "low" });
         } else if self.provider.id == "ollama" {
             let mapped = if model.split(':').next() == Some("gpt-oss") {
@@ -131,12 +189,13 @@ impl Llm {
     /// One complete text response.
     pub async fn create(&self, req: &Request<'_>) -> Res<String> {
         self.require_key()?;
+        self.prepare(req).await?;
         let label = self.provider.label;
         if self.provider.id != "openai" {
             let payload = self.chat_payload(req)?;
-            let mut response = Http::post(self.provider.endpoint).bearer(&self.key).timeout(90.0).json(&payload).send().await?;
+            let mut response = self.send_to().json(&payload).send().await?;
             if response.status != 200 {
-                return Err(format!("{label} API HTTP {}; check key, model and API credit.", response.status));
+                return Err(provider_error(self.provider, response.status));
             }
             let data = response.json().await?;
             let choice = &data["choices"][0];
@@ -186,6 +245,7 @@ impl Llm {
     /// Streams text deltas; dropping the stream closes the HTTP request.
     pub async fn stream(&self, req: &Request<'_>) -> Res<Stream> {
         self.require_key()?;
+        self.prepare(req).await?;
         let chat = self.provider.id != "openai";
         let payload = if chat {
             let mut p = self.chat_payload(req)?;
@@ -201,10 +261,10 @@ impl Llm {
             }
             p
         };
-        let response = Http::post(self.provider.endpoint).bearer(&self.key).timeout(90.0).json(&payload).send().await?;
+        let response = if chat { self.send_to() } else { Http::post(self.provider.endpoint).bearer(&self.key).timeout(90.0) }.json(&payload).send().await?;
         if response.status != 200 {
             return Err(if chat {
-                format!("{} API HTTP {}; check key, model and API credit.", self.provider.label, response.status)
+                provider_error(self.provider, response.status)
             } else {
                 format!("OpenAI API HTTP {}", response.status)
             });

@@ -5,7 +5,10 @@ function _authHeaders(): Record<string, string> {
 
 export async function apiGet<T>(url: string): Promise<T> {
   const res = await fetch(url, { headers: _authHeaders() });
-  if (!res.ok) throw new Error(`API request failed: ${res.status}`);
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error || `API request failed: ${res.status}`);
+  }
   return res.json();
 }
 

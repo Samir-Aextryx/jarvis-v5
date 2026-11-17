@@ -7,7 +7,7 @@ use crate::http::{Request, Response, content_type_for, url_decode};
 use crate::llm::{Llm, Request as LlmRequest};
 use crate::timezone::{self, Moment};
 use crate::util::{b64, s};
-use crate::{VERSION, apps, auth, autonomous, brain, calendar, google, memory, notes, pc_control, personal, privacy, settings, speech, stt, tasks, urgent_mail, vault, whatsapp};
+use crate::{VERSION, apps, auth, autonomous, brain, calendar, google, local_ai, memory, notes, pc_control, personal, privacy, settings, speech, stt, tasks, urgent_mail, vault, whatsapp};
 use serde_json::{Map, Value, json};
 
 pub async fn route(req: Request) -> Response {
@@ -33,6 +33,25 @@ async fn dispatch(req: Request) -> Result<Response, Response> {
         ("GET", "/api/settings/llm") => Ok(Response::ok(settings::provider_status())),
         ("POST", "/api/settings/test-llm") => test_llm(&req).await,
         ("GET", "/api/usage") => Ok(Response::ok(settings::usage_json())),
+
+        // Local AI (Ollama, models from Hugging Face)
+        ("GET", "/api/local-ai/status") => Ok(Response::ok(local_ai::status().await)),
+        ("POST", "/api/local-ai/install") => Ok(bad_request(local_ai::start_install())),
+        ("POST", "/api/local-ai/start") => Ok(bad_request(local_ai::ensure_running().await.map(|()| json!({ "running": true })))),
+        ("GET", "/api/local-ai/search") => Ok(bad_request(local_ai::search(&req.query_param("q").unwrap_or_default()).await)),
+        ("GET", "/api/local-ai/files") => Ok(bad_request(local_ai::files(&req.query_param("repo").unwrap_or_default()).await)),
+        ("POST", "/api/local-ai/pull") => {
+            let body = body(&req)?;
+            Ok(bad_request(local_ai::start_pull(s(&body, "model"))))
+        }
+        ("POST", "/api/local-ai/select") => {
+            let body = body(&req)?;
+            Ok(bad_request(local_ai::select(s(&body, "model")).await))
+        }
+        ("POST", "/api/local-ai/delete") => {
+            let body = body(&req)?;
+            Ok(bad_request(local_ai::delete(s(&body, "model")).await))
+        }
         ("POST", "/api/settings/keys") => save_key(&req).await,
         ("POST", "/api/settings/test-openai") => test_openai(&req).await,
         ("POST", "/api/settings/test-fish") => test_fish(&req).await,
@@ -41,7 +60,7 @@ async fn dispatch(req: Request) -> Result<Response, Response> {
             let (_, env) = settings::read_env();
             let get = |k: &str, d: &str| env.get(k).and_then(Value::as_str).unwrap_or(d).to_string();
             Ok(Response::ok(json!({
-                "user_name": get("USER_NAME", ""), "honorific": get("HONORIFIC", "sir"), "stt_keywords": get("JARVIS_STT_KEYWORDS", ""),
+                "user_name": Some(get("USER_NAME", "")).filter(|n| n != "your-name").unwrap_or_default(), "honorific": get("HONORIFIC", "sir"), "stt_keywords": get("JARVIS_STT_KEYWORDS", ""),
             })))
         }
         ("POST", "/api/settings/preferences") => save_preferences(&req).await,
@@ -296,8 +315,8 @@ fn bad_key(key: &str) -> bool {
 async fn test_llm(req: &Request) -> Result<Response, Response> {
     let body = body(req)?;
     let provider = s(&body, "provider").to_string();
-    if !["openai", "gemini", "grok", "ollama"].contains(&provider.as_str()) {
-        return Ok(Response::json(422, &json!({ "detail": [{ "loc": ["body", "provider"], "msg": "Input should be 'openai', 'gemini', 'grok' or 'ollama'", "type": "literal_error" }] })));
+    if !["openai", "gemini", "grok", "ollama", "local"].contains(&provider.as_str()) {
+        return Ok(Response::json(422, &json!({ "detail": [{ "loc": ["body", "provider"], "msg": "Input should be 'openai', 'gemini', 'grok', 'ollama' or 'local'", "type": "literal_error" }] })));
     }
     let key = secret(&body, "key_value");
     if key.as_deref().is_some_and(bad_key) {
@@ -310,7 +329,11 @@ async fn test_llm(req: &Request) -> Result<Response, Response> {
     Ok(Response::ok(if ok {
         json!({ "valid": true, "provider": provider })
     } else {
-        json!({ "valid": false, "provider": provider, "error": "Connection failed. Check the API key, model availability and API credit." })
+        json!({ "valid": false, "provider": provider, "error": if provider == "local" {
+            "Local AI did not answer. Check that Ollama runs and the chosen model is downloaded."
+        } else {
+            "Connection failed. Check the API key, model availability and API credit."
+        } })
     }))
 }
 
@@ -403,7 +426,7 @@ async fn settings_status() -> Value {
         "env_keys_set": {
             "openai": !openai.trim().is_empty(),
             "fish_audio": !fish.trim().is_empty() && fish != "your-fish-audio-api-key-here",
-            "fish_voice_id": !env_str("FISH_VOICE_ID").trim().is_empty(),
+            "fish_voice_id": !env_str("FISH_VOICE_ID").trim().is_empty() && !env_str("FISH_VOICE_ID").starts_with("your-"),
             "user_name": env_str("USER_NAME"),
         },
     })

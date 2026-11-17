@@ -5,7 +5,8 @@
 ## What Jarvis can do
 
 - **Talk naturally.** Streaming speech recognition, a natural voice from Fish Audio and short spoken replies. Interrupt Jarvis at any moment and it stops talking and listens.
-- **Choose your AI.** OpenAI, Google Gemini, xAI Grok or Ollama Cloud (GPT-OSS 120B for the fastest replies). Clear requests skip the AI entirely and run on a fast local path.
+- **Choose your AI: cloud or local.** Use OpenAI, Google Gemini, xAI Grok or Ollama Cloud with your own API key, or run a model on your PC. For local AI, Jarvis installs the free, signed Ollama app and downloads GGUF models straight from Hugging Face: pick a recommended model or search Hugging Face in the app. Clear requests skip the AI entirely and run on a fast local path.
+- **Guided setup.** On first start, a short setup assistant asks for your name, lets you choose cloud or local AI and takes the keys for OpenAI, Fish Audio and the other providers, checking each key before saving it.
 - **Remember and organize.** Personal memory, calendar and notes live in local SQLite databases on your PC.
 - **Handle email.** Read, search and draft in Gmail and Classic Outlook. Jarvis sends only when you explicitly ask, and it alerts you to new urgent mail.
 - **Use your Google account.** Calendar, Gmail, Contacts, Drive and Tasks, connected with your own sign-in.
@@ -32,7 +33,7 @@ No Git, Node.js, Python or Rust needed; Windows 10 or 11 is enough.
 2. Right-click the ZIP, choose **Properties**, tick **Unblock** and select **OK**. Windows marks downloaded files, and this lets the setup run.
 3. Extract the ZIP into a folder you keep, for example `Documents\Jarvis-v5`.
 4. Double-click **`Install Jarvis.cmd`**. It downloads the official Electron runtime, checks it against a pinned SHA-256 and puts a **Jarvis v5** shortcut on your desktop.
-5. Start Jarvis with the shortcut and enter your API keys in Settings → Voice & AI keys.
+5. Start Jarvis with the shortcut. The setup assistant opens and walks you through the AI choice (cloud or local) and your API keys.
 
 The ZIP is the complete source code plus the built interface; it contains no executable. Every release also offers the plain source code. To update, extract the new release into the same folder and run `Install Jarvis.cmd` again; your data is kept.
 
@@ -48,7 +49,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 The script installs the Node dependencies, builds the frontend, downloads the checksum-verified Electron binary and puts a **Jarvis v5** shortcut on the desktop. Start Jarvis with that shortcut, or with `npm start --prefix desktop`. `scripts\Start-JARVIS.cmd` starts the same app; `scripts\Stop-JARVIS.ps1` closes it.
 
-Enter API keys in Settings → Voice & AI keys. They are stored in Windows Credential Manager, never in the repository. Your personal data (settings, memory, calendar, logs) lives in `Documents\Jarvis v5\config`, outside the source tree.
+On first start the setup assistant asks for your AI choice and API keys; you can change everything later in Settings (tabs for General, AI, Voice, API keys, Accounts, PC & apps, Calls & alerts and System). Keys are stored in Windows Credential Manager, never in the repository. Your personal data (settings, memory, calendar, logs) lives in `Documents\Jarvis v5\config`, outside the source tree.
 
 To update: `git pull`, then run `scripts\install.ps1` again.
 
@@ -67,7 +68,7 @@ Backend changes need Docker Desktop: `rust\build.ps1` builds `rust/` into `deskt
 
 ## Settings and authentication
 
-The AI providers, Fish Audio and Google have their own settings.
+Settings is one window with tabs. **AI** switches between cloud and local AI and manages local models (download, use, remove, Hugging Face search). **API keys** holds every key with Save, Test and Remove. Changes save automatically. Local models run through Ollama on `127.0.0.1:11434`; nothing is sent to a cloud AI while local AI is selected, while speech recognition and the voice still use OpenAI and Fish Audio.
 
 The local auth token is held in Windows Credential Manager. WebSockets authenticate in the protocol handshake, never in the request URL. Normal HTTP APIs use Bearer authentication. The desktop reads the token from the backend and supplies it through its preload bridge. The browser dashboard receives a single-use, 60-second launch code and exchanges it for a separate dashboard session token that expires after 12 hours; the long-lived token is never written into the page or the link.
 

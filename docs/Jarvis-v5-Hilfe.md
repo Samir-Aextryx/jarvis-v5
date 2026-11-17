@@ -2,7 +2,7 @@
 
 ## WhatsApp Beta und dringende E-Mails
 
-Unter Settings → AI Settings kann die eigene WhatsApp-Kontaktnummer für „Boss“
+Unter Settings → Calls & alerts kann die eigene WhatsApp-Kontaktnummer für „Boss“
 im Windows-Anmeldeinformationsspeicher hinterlegt werden. Die Nummer wird nicht
 im Quellcode, in der `.env` oder im Gedächtnis abgelegt. Der Sprachbefehl
 „Call Boss on WhatsApp Beta“ beziehungsweise „Ruf mich an“ öffnet gezielt
@@ -50,7 +50,7 @@ Backend (Rust, als WebAssembly) läuft direkt darin. Eine eigene EXE gibt es nic
 daher funktioniert der Start auch mit aktivem Smart App Control. Eingerichtet wird
 alles einmalig mit `scripts\install.ps1` (siehe README).
 
-API-Schlüssel und Einstellungen über das Menü oben rechts → Settings eintragen.
+Beim ersten Start führt ein Einrichtungsassistent durch KI-Wahl (Cloud mit API-Schlüssel oder lokale KI über Ollama und Hugging Face) und API-Schlüssel. Später über das Menü oben rechts → Settings ändern. Die Einstellungen sind in Tabs gegliedert: General, AI, Voice, API keys, Accounts (Google, E-Mail), PC & apps, Calls & alerts und System.
 Die lokale Konfiguration liegt in `Documents\Jarvis v5\config\.env`.
 
 Oben rechts schaltet der Button „Mikro an“ / „Mikro aus“ das Zuhören um.
@@ -78,7 +78,7 @@ Fenstern. Internet- und Anbieterantwortzeiten bestimmen weiterhin einen Teil der
 
 ## Google verbinden
 
-Ein Google-API-Key kann unter Settings → Google → **Google API key** gespeichert,
+Ein Google-API-Key kann unter Settings → Accounts → **Google API key** gespeichert,
 geprüft und entfernt werden. Er liegt geschützt in der Windows-Anmeldeinformationsverwaltung.
 Der Test prüft konkret YouTube Data API v3; diese API muss im Google-Projekt aktiviert
 und für den Key erlaubt sein. „Show popular YouTube videos“ liest damit öffentliche
@@ -87,7 +87,7 @@ Videotitel. Ein erfolgreicher Test gewährt keinen Zugriff auf private Kontodate
 Websites öffnen: „Öffne youtube.com“, „Open github.com“ oder „Öffne example punkt com“.
 Die Adresse wird direkt im Standardbrowser geöffnet, ohne eine KI-Antwort abzuwarten.
 
-Oben rechts: Menü → Settings → Google.
+Oben rechts: Menü → Settings → Accounts.
 
 1. In Google Cloud ein Projekt wählen und die gewünschten APIs aktivieren:
    Gmail API, Google Calendar API, Google Drive API, optional Tasks API und People API.
@@ -191,7 +191,7 @@ Dashboard: Sage Open dashboard oder Öffne das Dashboard. Jarvis öffnet seine E
 - ChatGPT wird in Chrome geöffnet. Jarvis versucht das eindeutig erkannte Nachrichtenfeld zu füllen und Senden zu betätigen. Anmeldung, vorhandene Entwürfe oder nicht zugängliche Steuerelemente können das verhindern. In diesem Fall wird kein Versand behauptet; der Prompt wird gegebenenfalls als Textdatei auf dem Desktop gesichert. ChatGPT im Browser bekommt dadurch keinen automatischen Dateizugriff.
 - Für Programmieraufträge mit direktem Projektzugriff kann ausdrücklich Codex angesprochen werden. Der Projektpfad muss angegeben werden; ohne Projekt erstellt die bisherige Codex-Funktion einen neuen Projektordner. ChatGPT und Codex bleiben getrennte Ziele.
 - Sprich während einer Antwort, um die Sprachausgabe zu unterbrechen. "Stop" beendet die Antwort und lässt das Mikrofon aktiv. Bereits abgeschlossene Dateiaktionen werden dadurch nicht rückgängig gemacht; separat gestartete Codex-/Defender-Aufträge laufen weiter.
-- Settings > User Preferences > Pause before replying: 0, 100, 200, 300, 500, 1000, 2000, 3500 oder 5000 ms. Standard sind 0 ms; zusätzlich prüft Jarvis 160 ms Stille. Die Desktop-Aufnahme erlaubt bis zu 120 Sekunden pro Abschnitt. Echo-Unterdrückung ist aktiv; bei Rückkopplungen sind Kopfhörer hilfreich.
+- Settings > Voice > Pause before replying: 0, 100, 200, 300, 500, 1000, 2000, 3500 oder 5000 ms. Standard sind 0 ms; zusätzlich prüft Jarvis 160 ms Stille. Die Desktop-Aufnahme erlaubt bis zu 120 Sekunden pro Abschnitt. Echo-Unterdrückung ist aktiv; bei Rückkopplungen sind Kopfhörer hilfreich.
 - Settings zeigt, ob ein OpenAI-API-Schlüssel hinterlegt ist. Dies ist kein Verbindungstest.
 - Es handelt sich um gezielte PC-Funktionen, nicht um uneingeschränkte Kontrolle jeder beliebigen App oder das Ausführen beliebiger Shell-Befehle.
 
@@ -203,7 +203,7 @@ Zuverlässigkeit: Eindeutige ChatGPT-Prompts und vollständig angegebene Desktop
 
 Sage "Autonomous task: ..." oder "Deine Aufgabe ist ...". Beispiel: "Autonomous task: Save a file called plan.txt to Desktop with the content Work on Jarvis today."
 Jarvis plant unterstützte Schritte über OpenAI, führt sie nacheinander aus und nutzt die Ergebnisse für die weitere Planung. Bis zu zwölf Aktionen und acht Planungsrunden sind möglich; eindeutige Befehle werden direkt verarbeitet. Aufgaben laufen getrennt von der Sprachausgabe, maximal fünf Minuten. "Task status" meldet den Stand. "Stop" oder Escape bricht ab; bereits erledigte Aktionen werden nicht rückgängig gemacht.
-Settings > Autonomous PC assistant > Refresh task history zeigt den Verlauf. Fehlende Angaben führen zu einer Rückfrage. Lesezugriffe können einmal wiederholt werden; Schreib- und Sendeaktionen werden nicht automatisch wiederholt. Bei autonomen Codex-Aufträgen wartet Jarvis auf den Abschlussbericht und wertet ihn vor weiteren Schritten aus.
+Settings > PC & apps > Refresh task history zeigt den Verlauf. Fehlende Angaben führen zu einer Rückfrage. Lesezugriffe können einmal wiederholt werden; Schreib- und Sendeaktionen werden nicht automatisch wiederholt. Bei autonomen Codex-Aufträgen wartet Jarvis auf den Abschlussbericht und wertet ihn vor weiteren Schritten aus.
 Unterstützt werden die bereits vorhandenen lokalen PC-Funktionen; eine beliebige Aufgabe außerhalb dieser Werkzeuge kann Jarvis nicht selbstständig lösen. Es gibt keine ungefragte Hintergrundüberwachung oder automatischen Snapchat-Nachrichtenversand.
 Der fehlerhafte Windows-App-Namen-Hinweis wurde aus der Spracherkennung entfernt; die bekannte Fehltranskription wird zusätzlich verworfen.
 
@@ -276,7 +276,7 @@ Validierung: Versand mit simulierten API-/UI-Antworten getestet; beim Einbau wur
 
 Direkte Erinnerungen werden sofort lokal gespeichert und nach Neustarts wieder geladen, z. B. "Remember that I prefer meetings in the morning" oder "Merke dir, dass ich morgens arbeite". Die Datei config/MEMORY.md ist eine lesbare Ansicht des Gedaechtnisses; ihre Datenbank liegt in config/data/personal_memory.db. Einstellungen > Persoenliches Gedaechtnis oeffnet die Datei. API-Schluessel und Passwoerter gehoeren nicht hinein.
 
-Google-Kalender: Einstellungen > Google > Calendar reading und Calendar editing auswaehlen, dann Connect Google und die neuen Rechte bei Google bestaetigen. Bereits erteilte reine Leserechte reichen zum Schreiben nicht. Die Verbindung und Zustimmung erfolgen fuer das Google-Konto des Nutzers.
+Google-Kalender: Einstellungen > Accounts > Calendar reading und Calendar editing auswaehlen, dann Connect Google und die neuen Rechte bei Google bestaetigen. Bereits erteilte reine Leserechte reichen zum Schreiben nicht. Die Verbindung und Zustimmung erfolgen fuer das Google-Konto des Nutzers.
 
 Beispiele:
 - Show my calendar appointments for tomorrow.
@@ -318,7 +318,7 @@ Beispiele (Adresse durch den tatsächlichen Empfänger ersetzen):
 - "Send a Gmail email to alex@example.com with subject Meeting and body Can we meet on Friday? Then open Chrome."
 - "Show my calendar for tomorrow and save a summary as tomorrow.txt on Desktop."
 
-Gmail reading, Gmail drafts und bei Bedarf Gmail sending unter Settings > Google auswählen. Danach Connect Google anklicken und die ausgewählten Rechte bei Google erteilen. Gmail drafts speichert neue Entwürfe direkt im verbundenen Konto und erhält eine Entwurfs-ID als Bestätigung. Die Google-Berechtigung gmail.compose ist umfangreicher als reines Lesen; Jarvis verlangt für API-Versand weiterhin die separate Einstellung Gmail sending und einen ausdrücklichen Versandauftrag. Ohne Entwurfs-Anbindung bleibt der vorhandene Weg über die App-Oberfläche verfügbar. Explizite Chrome-Aufträge bleiben im sichtbaren Browser-Konto.
+Gmail reading, Gmail drafts und bei Bedarf Gmail sending unter Settings > Accounts auswählen. Danach Connect Google anklicken und die ausgewählten Rechte bei Google erteilen. Gmail drafts speichert neue Entwürfe direkt im verbundenen Konto und erhält eine Entwurfs-ID als Bestätigung. Die Google-Berechtigung gmail.compose ist umfangreicher als reines Lesen; Jarvis verlangt für API-Versand weiterhin die separate Einstellung Gmail sending und einen ausdrücklichen Versandauftrag. Ohne Entwurfs-Anbindung bleibt der vorhandene Weg über die App-Oberfläche verfügbar. Explizite Chrome-Aufträge bleiben im sichtbaren Browser-Konto.
 
 Fehlgeschlagenes Datei-/Ordner-/Mail-Lesen kann der Planer einmal erneut versuchen. Ein erfolgreicher Wiederholungsversuch löst genau diesen Fehler; andere Fehler bleiben sichtbar. Schreiben und Versenden werden nach einem unklaren Ergebnis nicht automatisch wiederholt. Task status nennt den Fortschritt; Stop/Escape beendet den laufenden Auftrag. Der Verlauf bleibt in Settings sichtbar.
 

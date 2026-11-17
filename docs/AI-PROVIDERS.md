@@ -1,14 +1,35 @@
-# OpenAI, Gemini, Grok und Ollama Cloud in Jarvis
+# OpenAI, Gemini, Grok, Ollama Cloud und lokale KI in Jarvis
 
 ## Bedienung
 
-1. **Einstellungen → Voice & AI keys**: Den jeweiligen API-Schlüssel eintragen.
-   OpenAI/Fish über „Save Keys“, Gemini/Grok über deren eigenen „Save“-Button.
-2. **AI Settings → Jarvis AI provider**: OpenAI, Google Gemini oder xAI Grok wählen.
-3. Das gewünschte Modell eintragen und **Save agent settings** drücken.
-4. Den „Test“-Button des Anbieters verwenden. Das ist eine echte kleine,
-   kostenpflichtige API-Abfrage mit dem eingestellten Modell. „Key saved“ bestätigt
-   nur das Speichern; erst „Connection successful“ bestätigt den API-Test.
+Beim ersten Start führt der Einrichtungsassistent durch Name, KI-Wahl (Cloud oder
+lokal) und die API-Schlüssel. Er lässt sich unter **Settings → General → Run setup
+again** erneut öffnen. Später:
+
+1. **Settings → API keys**: Schlüssel eintragen und mit **Save** speichern. Jede Karte
+   zeigt, ob ein Schlüssel gespeichert ist; **Test** prüft ihn, **Remove** löscht ihn.
+2. **Settings → AI → Cloud AI**: OpenAI, Google Gemini, xAI Grok oder Ollama Cloud
+   wählen. Modell-IDs stehen unter „Model IDs and reasoning“. Änderungen werden sofort
+   gespeichert.
+3. Der „Test“-Button ist eine echte kleine, kostenpflichtige API-Abfrage mit dem
+   eingestellten Modell. „Saved“ bestätigt nur das Speichern, „Working“ den API-Test.
+
+## Lokale KI (Ollama + Hugging Face)
+
+**Settings → AI → Local AI** (oder im Einrichtungsassistenten):
+
+1. **Install local AI** installiert die offizielle, signierte Ollama-App per
+   `winget` für den aktuellen Benutzer (ohne Adminrechte). Ohne winget führt der
+   Button zur Ollama-Downloadseite.
+2. Ein empfohlenes Modell mit **Download** laden oder Hugging Face durchsuchen und
+   unter **Versions** eine Quantisierung wählen (Q4_K_M ist ein guter Kompromiss).
+   Ollama lädt GGUF-Dateien direkt als `hf.co/<repo>:<quant>`.
+3. **Use** macht ein heruntergeladenes Modell zur KI von Jarvis; **Remove** löscht es.
+
+Lokale Anfragen gehen an `http://127.0.0.1:11434/v1/chat/completions`, ohne
+API-Schlüssel. Jarvis startet Ollama bei Bedarf selbst. Modelle mit Denkmodus
+(z. B. Qwen3 8B) bekommen die gewählte Reasoning-Stufe, alle anderen `none`.
+Spracherkennung (OpenAI) und Stimme (Fish Audio) brauchen weiterhin ihre Schlüssel.
 
 OpenAI bleibt die bestehende Standardauswahl. Neue Standardmodelle sind
 `gemini-3.8-flash` und `grok-4.7`, gemäß den bei Umsetzung abgerufenen offiziellen

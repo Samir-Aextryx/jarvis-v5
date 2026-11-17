@@ -17,6 +17,7 @@ pub mod host;
 pub mod http;
 pub mod intents;
 pub mod llm;
+pub mod local_ai;
 pub mod local_pc;
 pub mod memory;
 pub mod notes;
@@ -47,7 +48,7 @@ pub mod ws;
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
 
-pub const VERSION: &str = "5.1.0";
+pub const VERSION: &str = "5.2.0";
 
 thread_local! {
     static STARTED: std::cell::Cell<f64> = const { std::cell::Cell::new(0.0) };
