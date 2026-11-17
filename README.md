@@ -22,9 +22,21 @@
 
 ## How it runs
 
-Jarvis v5 runs straight from source. Stock Electron opens the interface and runs the backend, which is written in Rust and compiled to WebAssembly (`desktop/backend`, committed). There is no installer and no packaged `.exe`, so Jarvis also starts with Windows Smart App Control turned on.
+Jarvis v5 runs straight from source. Stock Electron opens the interface and runs the backend, which is written in Rust and compiled to WebAssembly (`desktop/backend`, committed). There is no packaged `.exe` of its own, so Jarvis also starts with Windows Smart App Control turned on.
 
-## Install and start
+## Download the app
+
+No Git, Node.js, Python or Rust needed; Windows 10 or 11 is enough.
+
+1. Download **`Jarvis-v5.x.x-windows.zip`** from the [latest release](https://github.com/Samir-Aextryx/jarvis-v5/releases/latest).
+2. Right-click the ZIP, choose **Properties**, tick **Unblock** and select **OK**. Windows marks downloaded files, and this lets the setup run.
+3. Extract the ZIP into a folder you keep, for example `Documents\Jarvis-v5`.
+4. Double-click **`Install Jarvis.cmd`**. It downloads the official Electron runtime, checks it against a pinned SHA-256 and puts a **Jarvis v5** shortcut on your desktop.
+5. Start Jarvis with the shortcut and enter your API keys in Settings → Voice & AI keys.
+
+The ZIP is the complete source code plus the built interface; it contains no executable. Every release also offers the plain source code. To update, extract the new release into the same folder and run `Install Jarvis.cmd` again; your data is kept.
+
+## Install from source
 
 Requirements: Windows 10 or 11, [Node.js 22.12+](https://nodejs.org/) and Git. Python and Rust are not needed to run Jarvis.
 
@@ -45,7 +57,8 @@ To update: `git pull`, then run `scripts\install.ps1` again.
 - `rust/src/`: the backend. HTTP/WebSocket server and auth, voice turns and speech, settings and AI providers, memory, calendar and notes, Google, Outlook, urgent mail, WhatsApp checks, Atlassian, app launching, UI Automation, PC control and autonomous jobs. `rust/PORTING.md` maps it to the former Python modules.
 - `desktop/`: Electron shell. `host.cjs` gives the WebAssembly backend sockets, files, processes and one long-lived PowerShell bridge for Win32, COM and UI Automation; `backend/` is the built backend.
 - `frontend/`: TypeScript interface (Vite).
-- `scripts/`: install, start, stop and validation.
+- `scripts/`: install, start, stop, validation and `package-release.ps1`, which builds the download ZIP.
+- `Install Jarvis.cmd`: one-click setup for the download package.
 - `tests/`, `docs/`: frontend checks and documentation.
 
 ## Development

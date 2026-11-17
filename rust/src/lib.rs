@@ -47,7 +47,7 @@ pub mod ws;
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
 
-pub const VERSION: &str = "5.0.0";
+pub const VERSION: &str = "5.1.0";
 
 thread_local! {
     static STARTED: std::cell::Cell<f64> = const { std::cell::Cell::new(0.0) };

@@ -2,7 +2,7 @@
 rem Starts Jarvis from source with stock Electron; the backend is WebAssembly.
 cd /d "%~dp0.."
 if not exist "desktop\node_modules\electron\dist\electron.exe" (
-  echo Electron fehlt. Bitte zuerst scripts\install.ps1 ausfuehren.
+  echo Electron fehlt. Bitte zuerst "Install Jarvis.cmd" ausfuehren.
   pause
   exit /b 1
 )
