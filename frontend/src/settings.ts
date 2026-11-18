@@ -39,14 +39,14 @@ let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
 const icon = (path: string) => `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
 const TABS = [
-  { id: 'general', label: 'General', note: 'Your name, your Jarvis and the setup assistant.', icon: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') },
-  { id: 'ai', label: 'AI', note: 'Choose how Jarvis thinks: a cloud AI or a model on this PC.', icon: icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/><circle cx="12" cy="12" r="3.5"/>') },
-  { id: 'voice', label: 'Voice', note: 'How Jarvis listens to you and how it sounds.', icon: icon('<path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3"/>') },
-  { id: 'keys', label: 'API keys', note: 'Keys for the services Jarvis uses, stored safely on this PC.', icon: icon('<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M14 9l2 2"/>') },
-  { id: 'accounts', label: 'Accounts', note: 'Google, Gmail, Outlook and your calendar.', icon: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>') },
-  { id: 'pc', label: 'PC & apps', note: 'Tasks Jarvis runs on this PC and the apps it opens.', icon: icon('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>') },
-  { id: 'calls', label: 'Calls & alerts', note: 'Urgent mail alerts and WhatsApp calls.', icon: icon('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>') },
-  { id: 'system', label: 'System', note: 'Connections and the state of Jarvis on this PC.', icon: icon('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>') },
+  { id: 'general', group: 'Jarvis', label: 'General', note: 'Your name, your Jarvis and the setup assistant.', icon: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') },
+  { id: 'ai', group: 'Jarvis', label: 'AI', note: 'Choose how Jarvis thinks: a cloud AI or a model on this PC.', icon: icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/><circle cx="12" cy="12" r="3.5"/>') },
+  { id: 'voice', group: 'Jarvis', label: 'Voice', note: 'How Jarvis listens to you and how it sounds.', icon: icon('<path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3"/>') },
+  { id: 'keys', group: 'Connections', label: 'API keys', note: 'Keys for the services Jarvis uses, stored safely on this PC.', icon: icon('<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M14 9l2 2"/>') },
+  { id: 'accounts', group: 'Connections', label: 'Accounts', note: 'Google, Gmail, Outlook and your calendar.', icon: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>') },
+  { id: 'pc', group: 'Automation', label: 'PC & apps', note: 'Tasks Jarvis runs on this PC and the apps it opens.', icon: icon('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>') },
+  { id: 'calls', group: 'Automation', label: 'Calls & alerts', note: 'Urgent mail alerts and WhatsApp calls.', icon: icon('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>') },
+  { id: 'system', group: 'About', label: 'System', note: 'Connections and the state of Jarvis on this PC.', icon: icon('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>') },
 ] as const;
 type TabID = typeof TABS[number]['id'];
 
@@ -71,7 +71,7 @@ function buildPanelHTML(): string {
       </div>
 
       <nav class="settings-nav" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
-        ${TABS.map(tab => `<button type="button" class="settings-tab" role="tab" id="tab-${tab.id}" data-tab="${tab.id}" aria-controls="pane-${tab.id}" aria-selected="false" tabindex="-1">${tab.icon}<span>${tab.label}</span></button>`).join('')}
+        ${TABS.map((tab, i) => (i === 0 || TABS[i - 1].group !== tab.group ? `<span class="settings-nav-group" aria-hidden="true">${tab.group}</span>` : '') + `<button type="button" class="settings-tab" role="tab" id="tab-${tab.id}" data-tab="${tab.id}" aria-controls="pane-${tab.id}" aria-selected="false" tabindex="-1">${tab.icon}<span>${tab.label}</span></button>`).join('')}
         <div class="settings-nav-foot" id="settings-ai-badge" data-state="unknown" role="status">
           <span class="badge-dot" aria-hidden="true"></span>
           <span><small>Jarvis thinks with</small><strong id="settings-ai-name">Checking…</strong></span>
@@ -80,11 +80,19 @@ function buildPanelHTML(): string {
 
       <div class="settings-body">
         <div class="settings-pane" id="pane-general" role="tabpanel" aria-labelledby="tab-general" hidden>
-          ${paneHead('general')}
-          <div class="voice-only-card" role="note">
-            <span class="voice-only-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3m-4 0h8"/></svg></span>
-            <div><strong>Speak naturally. Jarvis answers with voice.</strong><p>Use the microphone on the home screen for every request. Typing is only needed here for setup.</p></div>
-          </div>
+          <header class="profile-hero">
+            <span class="profile-avatar" id="profile-avatar" aria-hidden="true">J</span>
+            <div class="profile-text">
+              <span class="profile-greet" id="profile-greet">Hello</span>
+              <h2 id="profile-name">Your Jarvis</h2>
+              <p>Speak naturally and Jarvis answers with voice. Typing is only needed here for setup.</p>
+              <div class="hero-chips" role="status">
+                <span class="hero-chip" id="hero-ai" data-state="unknown"><i></i><span>AI · checking…</span></span>
+                <span class="hero-chip" id="hero-voice" data-state="unknown"><i></i><span>Voice · checking…</span></span>
+                <span class="hero-chip" id="hero-google" data-state="unknown"><i></i><span>Google · checking…</span></span>
+              </div>
+            </div>
+          </header>
           <section class="settings-section" id="section-profile">
             <h3>About you</h3>
             <div class="settings-grid two">
@@ -105,16 +113,24 @@ function buildPanelHTML(): string {
           <section class="settings-section" id="section-jarvis">
             <h3>Your Jarvis</h3>
             <p class="google-help">Your own calendar and editable memory, saved on this PC. No account needed.</p>
-            <div class="settings-actions start">
-              <button type="button" class="settings-btn" id="settings-custom-memory">My memory</button>
-              <button type="button" class="settings-btn" id="settings-custom-calendar">My calendar</button>
-              <button type="button" class="settings-btn" id="btn-open-memory">Open MEMORY.md</button>
+            <div class="action-tiles">
+              <button type="button" class="action-tile" id="settings-custom-memory">
+                <span class="tile-icon" aria-hidden="true">${icon('<path d="M12 4a4 4 0 0 0-4 4 4 4 0 0 0-3 6.5A4 4 0 0 0 9 20h.5M12 4a4 4 0 0 1 4 4 4 4 0 0 1 3 6.5A4 4 0 0 1 15 20h-.5M12 4v16"/>')}</span>
+                <strong>My memory</strong><small>What Jarvis knows about you</small>
+              </button>
+              <button type="button" class="action-tile" id="settings-custom-calendar">
+                <span class="tile-icon" aria-hidden="true">${icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')}</span>
+                <strong>My calendar</strong><small>Events Jarvis keeps for you</small>
+              </button>
+              <button type="button" class="action-tile" id="btn-open-memory">
+                <span class="tile-icon" aria-hidden="true">${icon('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>')}</span>
+                <strong>MEMORY.md</strong><small>Edit the memory file</small>
+              </button>
+              <button type="button" class="action-tile" id="btn-run-setup">
+                <span class="tile-icon" aria-hidden="true">${icon('<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>')}</span>
+                <strong>Run setup again</strong><small>AI, keys and voice</small>
+              </button>
             </div>
-          </section>
-          <section class="settings-section" id="section-setup">
-            <h3>Setup assistant</h3>
-            <p class="google-help">Walk through the AI choice, keys and voice again.</p>
-            <div class="settings-actions start"><button type="button" class="settings-btn" id="btn-run-setup">Run setup again</button></div>
           </section>
         </div>
 
@@ -200,11 +216,13 @@ function buildPanelHTML(): string {
               <label><input type="checkbox" name="google-service" value="tasks"> Tasks</label>
               <label><input type="checkbox" name="google-service" value="contacts"> Contacts</label>
             </div>
-            <label class="google-help" for="google-client-file">Import Google OAuth client JSON (Desktop app)</label>
-            <input id="google-client-file" type="file" accept=".json,application/json">
-            <p class="google-help">Create a Desktop OAuth client in Google Cloud with the APIs you want. Tokens are stored in Windows Credential Manager.</p>
+            <input id="google-client-file" class="file-input" type="file" accept=".json,application/json">
+            <label class="file-pick" for="google-client-file">
+              <span class="tile-icon" aria-hidden="true">${icon('<path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>')}</span>
+              <span><strong>Import OAuth client JSON</strong><small>Create a Desktop OAuth client in Google Cloud with the APIs you want. Tokens are stored in Windows Credential Manager.</small></span>
+            </label>
             <div class="google-buttons">
-              <button type="button" id="google-connect">Connect Google</button>
+              <button type="button" class="settings-btn primary" id="google-connect">Connect Google</button>
               <button type="button" id="google-refresh">Refresh status</button>
               <button type="button" id="google-disconnect">Disconnect</button>
               <button type="button" id="google-setup">Setup guide</button>
@@ -315,6 +333,23 @@ function formatUptime(seconds: number): string {
   return `${h}h ${m}m`;
 }
 
+function setHeroChip(id: string, ok: boolean | null, text: string) {
+  const chip = document.getElementById(id);
+  if (!chip) return;
+  chip.dataset.state = ok === null ? 'unknown' : ok ? 'ok' : 'missing';
+  chip.querySelector('span')!.textContent = text;
+}
+
+function updateProfile(name: string) {
+  const hour = new Date().getHours();
+  const greet = hour < 5 ? 'Good night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const clean = name.trim();
+  const set = (id: string, value: string) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+  set('profile-greet', greet + (clean ? ',' : ''));
+  set('profile-name', clean || 'Welcome to Jarvis');
+  set('profile-avatar', (clean[0] || 'J').toUpperCase());
+}
+
 async function loadAiBadge() {
   const badge = document.getElementById('settings-ai-badge');
   const name = document.getElementById('settings-ai-name');
@@ -325,9 +360,11 @@ async function loadAiBadge() {
     const model = (llm.model || '').replace(/^hf\.co\//, '').replace(/^[^/]+\//, '').replace(/-GGUF/i, '');
     badge.dataset.state = llm.available ? 'ok' : 'missing';
     name.textContent = llm.available ? `${provider?.name || llm.provider} · ${model}` : 'Not set up yet';
+    setHeroChip('hero-ai', llm.available, llm.available ? `${provider?.name || llm.provider} · ${model}` : 'AI · not set up');
   } catch {
     badge.dataset.state = 'missing';
     name.textContent = 'Unknown';
+    setHeroChip('hero-ai', null, 'AI · unknown');
   }
 }
 
@@ -358,6 +395,8 @@ async function loadStatus() {
     setDotStatus("status-server", "green");
     setDotStatus("status-openai", status.env_keys_set.openai ? "green" : "red");
     setDotStatus("status-fish", status.env_keys_set.fish_audio ? "green" : "red");
+    const voiceReady = status.env_keys_set.openai && status.env_keys_set.fish_audio;
+    setHeroChip("hero-voice", voiceReady, voiceReady ? "Hearing & voice ready" : status.env_keys_set.openai ? "Voice key missing" : "Hearing key missing");
     const serverDetail = document.getElementById("status-server-detail");
     if (serverDetail) serverDetail.textContent = `port ${status.server_port} · up ${formatUptime(status.uptime_seconds)}`;
     const set = (id: string, value: string) => { const el = document.getElementById(id); if (el) el.textContent = value; };
@@ -377,6 +416,7 @@ async function loadPreferences() {
   try {
     const prefs = await apiGet<PreferencesResponse>("/api/settings/preferences");
     (document.getElementById("input-user-name") as HTMLInputElement).value = prefs.user_name || "";
+    updateProfile(prefs.user_name || "");
     (document.getElementById("input-honorific") as HTMLSelectElement).value = prefs.honorific || "sir";
     (document.getElementById('input-stt-keywords') as HTMLInputElement).value = prefs.stt_keywords || '';
   } catch (e) {
@@ -386,6 +426,7 @@ async function loadPreferences() {
 
 async function savePreferencesFromInputs(): Promise<boolean> {
   const user_name = (document.getElementById("input-user-name") as HTMLInputElement).value.trim();
+  updateProfile(user_name);
   const honorific = (document.getElementById("input-honorific") as HTMLSelectElement).value;
   const stt_keywords = (document.getElementById('input-stt-keywords') as HTMLInputElement).value.trim();
   try {
@@ -448,6 +489,13 @@ function wireEvents() {
   const micSensitivity = document.getElementById('input-mic-sensitivity') as HTMLSelectElement;
   micSensitivity.value = localStorage.getItem('jarvis_mic_sensitivity') || 'auto';
   micSensitivity.addEventListener('change', () => { localStorage.setItem('jarvis_mic_sensitivity', micSensitivity.value); showToast("Saved."); });
+  const nameInput = document.getElementById('input-user-name') as HTMLInputElement;
+  nameInput.addEventListener('input', () => updateProfile(nameInput.value));
+  document.getElementById('google-client-file')?.addEventListener('change', event => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    const title = document.querySelector('.file-pick strong');
+    if (file && title) title.textContent = file.name;
+  });
   for (const id of ['input-user-name', 'input-honorific', 'input-stt-keywords']) {
     document.getElementById(id)?.addEventListener('change', () => { void savePreferencesFromInputs(); });
   }
@@ -541,9 +589,13 @@ async function loadGoogleStatus() {
     const status = await apiGet<{ configured: boolean; connected: boolean; connecting: boolean; services: string[]; error: string; api_key_set: boolean }>("/api/google/status");
     const keyStatus = document.getElementById("google-key-status");
     if (keyStatus) keyStatus.textContent = status.api_key_set ? "API key saved. Use Test YouTube API to check access." : "No API key saved.";
+    setHeroChip("hero-google", status.connected, status.connected ? "Google connected" : "Google not connected");
     element.textContent = status.error || (status.connecting ? "Waiting for Google sign-in…" : status.connected ? `Connected: ${status.services.join(", ")}. Ready for voice commands.` : status.configured ? "OAuth client saved. Click Connect Google." : "Import your Desktop OAuth client JSON first.");
     if (status.configured) document.querySelectorAll<HTMLInputElement>('input[name="google-service"]').forEach(el => { el.checked = status.services.includes(el.value); });
-  } catch { element.textContent = "Google connection status is unavailable."; }
+  } catch {
+    element.textContent = "Google connection status is unavailable.";
+    setHeroChip("hero-google", null, "Google · unknown");
+  }
 }
 
 async function loadAutonomy() {

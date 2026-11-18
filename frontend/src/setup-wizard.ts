@@ -34,7 +34,7 @@ const html = () => `
 
     <section class="wizard-step" data-step="0">
       <div class="wizard-hero" aria-hidden="true"><span></span></div>
-      <p class="wizard-eyebrow">SETUP · ABOUT TWO MINUTES</p>
+      <p class="wizard-eyebrow">Setup · about two minutes</p>
       <h2 id="wizard-title">Welcome to Jarvis</h2>
       <p class="wizard-lead">Your voice assistant for Windows. Let’s choose how Jarvis thinks, how it hears you and how it speaks.</p>
       <div class="wizard-fields two">
