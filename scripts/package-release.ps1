@@ -34,8 +34,9 @@ try {
         }
         foreach ($name in $top) {
             $text = [IO.File]::ReadAllText((Join-Path $root $name))
-            # Links in the README point into the source tree, which is in "app" here.
-            if ($name -eq 'README.md') { $text = [regex]::Replace($text, '\]\((?!https?:|#|app/)([^)]+)\)', '](app/$1)') }
+            # Links in the README point into the source tree, which is in "app" here;
+            # the files at the top of the package stay where they are.
+            if ($name -eq 'README.md') { $text = [regex]::Replace($text, '\]\((?!https?:|#|app/|LICENSE\)|Install%20Jarvis\.cmd\))([^)]+)\)', '](app/$1)') }
             if ($name -like '*.cmd') { $text = $text -replace "(?<!`r)`n", "`r`n" }
             $entry = $archive.CreateEntry("Jarvis-v5/$name", [IO.Compression.CompressionLevel]::Optimal)
             $stream = $entry.Open()
