@@ -8,7 +8,7 @@ import { apiGet, apiPost } from './api/client';
  */
 import { openPersonalPanel } from './personal-panel';
 import { aiSettingsHTML, appsSettingsHTML, callsSettingsHTML, emailSettingsHTML, loadAgentSettings, refreshLocalAi, stopLocalAiPolling, wireAgentSettings, agentRequest } from './agent-settings';
-import { DEFAULT_FISH_VOICE, keysHTML, loadProviderKeys, readLLMStatus, wireProviderKeys } from './provider-settings';
+import { DEFAULT_FISH_VOICE, keysHTML, loadProviderKeys, readLLMStatus, savedKeys, wireProviderKeys } from './provider-settings';
 import { openSetupWizard, isSetupWizardOpen } from './setup-wizard';
 import { showToast } from './toast';
 
@@ -39,35 +39,48 @@ let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
 const icon = (path: string) => `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
 const TABS = [
-  { id: 'general', label: 'General', icon: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') },
-  { id: 'ai', label: 'AI', icon: icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/><circle cx="12" cy="12" r="3.5"/>') },
-  { id: 'voice', label: 'Voice', icon: icon('<path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3"/>') },
-  { id: 'keys', label: 'API keys', icon: icon('<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M14 9l2 2"/>') },
-  { id: 'accounts', label: 'Accounts', icon: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>') },
-  { id: 'pc', label: 'PC & apps', icon: icon('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>') },
-  { id: 'calls', label: 'Calls & alerts', icon: icon('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>') },
-  { id: 'system', label: 'System', icon: icon('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>') },
+  { id: 'general', label: 'General', note: 'Your name, your Jarvis and the setup assistant.', icon: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') },
+  { id: 'ai', label: 'AI', note: 'Choose how Jarvis thinks: a cloud AI or a model on this PC.', icon: icon('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/><circle cx="12" cy="12" r="3.5"/>') },
+  { id: 'voice', label: 'Voice', note: 'How Jarvis listens to you and how it sounds.', icon: icon('<path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3"/>') },
+  { id: 'keys', label: 'API keys', note: 'Keys for the services Jarvis uses, stored safely on this PC.', icon: icon('<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M14 9l2 2"/>') },
+  { id: 'accounts', label: 'Accounts', note: 'Google, Gmail, Outlook and your calendar.', icon: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>') },
+  { id: 'pc', label: 'PC & apps', note: 'Tasks Jarvis runs on this PC and the apps it opens.', icon: icon('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>') },
+  { id: 'calls', label: 'Calls & alerts', note: 'Urgent mail alerts and WhatsApp calls.', icon: icon('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>') },
+  { id: 'system', label: 'System', note: 'Connections and the state of Jarvis on this PC.', icon: icon('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>') },
 ] as const;
 type TabID = typeof TABS[number]['id'];
+
+const paneHead = (id: TabID) => {
+  const tab = TABS.find(t => t.id === id)!;
+  return `<header class="pane-head"><span class="pane-icon" aria-hidden="true">${tab.icon}</span><div><h2>${tab.label}</h2><p>${tab.note}</p></div></header>`;
+};
 
 function buildPanelHTML(): string {
   return `
     <div class="settings-backdrop" id="settings-backdrop" aria-hidden="true"></div>
     <div class="settings-panel" id="settings-panel-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="settings-header">
-        <div class="settings-heading">
-          <span class="settings-eyebrow">JARVIS</span>
-          <h2 id="settings-title">Settings</h2>
+        <div class="settings-brand">
+          <span class="settings-logo" aria-hidden="true"><span></span></span>
+          <div class="settings-heading">
+            <span class="settings-eyebrow">JARVIS <span id="settings-version"></span></span>
+            <h2 id="settings-title">Settings</h2>
+          </div>
         </div>
         <button class="settings-close" id="settings-close" type="button" aria-label="Close settings">&times;</button>
       </div>
 
       <nav class="settings-nav" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
         ${TABS.map(tab => `<button type="button" class="settings-tab" role="tab" id="tab-${tab.id}" data-tab="${tab.id}" aria-controls="pane-${tab.id}" aria-selected="false" tabindex="-1">${tab.icon}<span>${tab.label}</span></button>`).join('')}
+        <div class="settings-nav-foot" id="settings-ai-badge" data-state="unknown" role="status">
+          <span class="badge-dot" aria-hidden="true"></span>
+          <span><small>Jarvis thinks with</small><strong id="settings-ai-name">Checking…</strong></span>
+        </div>
       </nav>
 
       <div class="settings-body">
         <div class="settings-pane" id="pane-general" role="tabpanel" aria-labelledby="tab-general" hidden>
+          ${paneHead('general')}
           <div class="voice-only-card" role="note">
             <span class="voice-only-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3m-4 0h8"/></svg></span>
             <div><strong>Speak naturally. Jarvis answers with voice.</strong><p>Use the microphone on the home screen for every request. Typing is only needed here for setup.</p></div>
@@ -106,10 +119,12 @@ function buildPanelHTML(): string {
         </div>
 
         <div class="settings-pane" id="pane-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
+          ${paneHead('ai')}
           ${aiSettingsHTML}
         </div>
 
         <div class="settings-pane" id="pane-voice" role="tabpanel" aria-labelledby="tab-voice" hidden>
+          ${paneHead('voice')}
           <section class="settings-section" id="section-preferences">
             <h3>Listening</h3>
             <div class="settings-grid two">
@@ -166,10 +181,12 @@ function buildPanelHTML(): string {
         </div>
 
         <div class="settings-pane" id="pane-keys" role="tabpanel" aria-labelledby="tab-keys" hidden>
+          ${paneHead('keys')}
           ${keysHTML}
         </div>
 
         <div class="settings-pane" id="pane-accounts" role="tabpanel" aria-labelledby="tab-accounts" hidden>
+          ${paneHead('accounts')}
           <section class="settings-section" id="section-google">
             <h3>Google account</h3>
             <p class="google-help">Connect your account to read Gmail, calendar events, Drive files, tasks and contacts. Jarvis sends mail only when you explicitly say “send”. Calendar times use Europe/Zurich.</p>
@@ -211,6 +228,7 @@ function buildPanelHTML(): string {
         </div>
 
         <div class="settings-pane" id="pane-pc" role="tabpanel" aria-labelledby="tab-pc" hidden>
+          ${paneHead('pc')}
           <section class="settings-section" id="section-voice-automation">
             <h3>PC tasks by voice</h3>
             <p id="local-pc-status" class="status-box" role="status">Checking AI configuration…</p>
@@ -223,10 +241,12 @@ function buildPanelHTML(): string {
         </div>
 
         <div class="settings-pane" id="pane-calls" role="tabpanel" aria-labelledby="tab-calls" hidden>
+          ${paneHead('calls')}
           ${callsSettingsHTML}
         </div>
 
         <div class="settings-pane" id="pane-system" role="tabpanel" aria-labelledby="tab-system" hidden>
+          ${paneHead('system')}
           <section class="settings-section" id="section-status">
             <h3>Connections</h3>
             <div class="status-grid">
@@ -295,8 +315,29 @@ function formatUptime(seconds: number): string {
   return `${h}h ${m}m`;
 }
 
+async function loadAiBadge() {
+  const badge = document.getElementById('settings-ai-badge');
+  const name = document.getElementById('settings-ai-name');
+  if (!badge || !name) return;
+  try {
+    const llm = await readLLMStatus();
+    const provider = llm.providers.find(p => p.id === llm.provider);
+    const model = (llm.model || '').replace(/^hf\.co\//, '').replace(/^[^/]+\//, '').replace(/-GGUF/i, '');
+    badge.dataset.state = llm.available ? 'ok' : 'missing';
+    name.textContent = llm.available ? `${provider?.name || llm.provider} · ${model}` : 'Not set up yet';
+  } catch {
+    badge.dataset.state = 'missing';
+    name.textContent = 'Unknown';
+  }
+}
+
 async function loadStatus() {
   void loadProviderKeys();
+  void loadAiBadge();
+  void fetch('/api/health').then(r => r.json()).then((health: { version?: string }) => {
+    const el = document.getElementById('settings-version');
+    if (el && health.version) el.textContent = `v${health.version}`;
+  }).catch(() => {});
   void loadAutonomy();
   void apiGet<{provider: string; model: string; available: boolean}>("/api/local-pc/status").then(status => {
     const el = document.getElementById("local-pc-status");
@@ -571,16 +612,28 @@ export function isSettingsOpen(): boolean {
   return isOpen;
 }
 
-/** Opens the setup wizard on first start, until the AI is configured or setup was finished. */
+/**
+ * First start: until setup is finished, Jarvis opens on the setup screen and
+ * every step must be completed. Installs that already have their AI and voice
+ * keys (from before the setup screen existed) are marked as set up instead.
+ */
 export async function checkFirstTimeSetup(): Promise<boolean> {
-  try {
-    const [llm, agent] = await Promise.all([readLLMStatus(), agentRequest('settings') as Promise<{ setup_done?: boolean }>]);
-    if (!llm.available && !agent.setup_done) {
-      void openSetupWizard();
+  for (let attempt = 0; attempt < 30; attempt++) {
+    try {
+      const [llm, agent, keys] = await Promise.all([
+        readLLMStatus(), agentRequest('settings') as Promise<{ setup_done?: boolean }>, savedKeys(),
+      ]);
+      if (agent.setup_done) return false;
+      if (llm.available && keys.openai && keys.fish) {
+        await agentRequest('settings', { setup_done: true });
+        return false;
+      }
+      void openSetupWizard({ required: true });
       return true;
+    } catch {
+      // The backend is still starting; try again shortly.
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-  } catch {
-    // Server not ready yet, skip
   }
   return false;
 }

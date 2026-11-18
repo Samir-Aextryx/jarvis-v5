@@ -1,1 +1,2 @@
 desktop/backend/** -text
+*.cmd text eol=crlf

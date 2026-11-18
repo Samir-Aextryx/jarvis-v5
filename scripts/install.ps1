@@ -6,7 +6,9 @@
 # npm. The download package (GitHub release) already contains the built
 # frontend; it needs no Node.js and fetches the official Electron build, checked
 # against a pinned SHA-256. Running it again updates Electron and repairs the shortcut.
-param([switch]$NoShortcut)
+#
+# -Start opens Jarvis when setup is done ("Install Jarvis.cmd" uses it).
+param([switch]$NoShortcut, [switch]$Start)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $jarvisRepoRoot = Split-Path -Parent $PSScriptRoot
@@ -38,8 +40,39 @@ function Install-Electron([string]$Destination) {
     } finally { Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue }
 }
 
+# Packages up to 5.2.0 kept the source at the top of the folder; newer ones keep
+# it in "app". After an update in the same folder, the old copy goes to the
+# Recycle Bin. Personal data is in Documents\Jarvis v5\config, never here.
+function Remove-OldLayout([string]$AppRoot) {
+    if ((Split-Path -Leaf $AppRoot) -ne 'app') { return }
+    $top = Split-Path -Parent $AppRoot
+    if ((Test-Path -LiteralPath (Join-Path $top '.git')) -or
+        -not (Test-Path -LiteralPath (Join-Path $top 'frontend\dist\.prebuilt')) -or
+        -not (Test-Path -LiteralPath (Join-Path $top 'desktop\backend\jarvis_bg.wasm'))) { return }
+    $oldElectron = Join-Path $top 'desktop\node_modules\electron\dist\electron.exe'
+    if (Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.ExecutablePath -eq $oldElectron }) {
+        Write-Output 'Die alte Jarvis-Version läuft noch; ihre Dateien bleiben vorerst liegen. Jarvis schließen und Install Jarvis.cmd erneut starten, um aufzuräumen.'
+        return
+    }
+    Add-Type -AssemblyName Microsoft.VisualBasic
+    $moved = 0
+    foreach ($name in 'desktop', 'frontend', 'rust', 'scripts', 'tests', 'docs', 'data', '.env.example', '.gitattributes', '.gitignore', 'CLAUDE.md') {
+        $path = Join-Path $top $name
+        if (-not (Test-Path -LiteralPath $path)) { continue }
+        if ($name -eq 'data' -and (Get-ChildItem -LiteralPath $path -Force | Where-Object Name -ne '.gitkeep')) { continue }
+        if (Test-Path -LiteralPath $path -PathType Container) {
+            [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($path, 'OnlyErrorDialogs', 'SendToRecycleBin')
+        } else {
+            [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($path, 'OnlyErrorDialogs', 'SendToRecycleBin')
+        }
+        $moved++
+    }
+    if ($moved) { Write-Output "Alte Programmdateien der vorherigen Version in den Papierkorb verschoben ($moved)." }
+}
+
 Push-Location $jarvisRepoRoot
 try {
+    Remove-OldLayout $jarvisRepoRoot
     if (-not (Test-Path -LiteralPath (Join-Path $jarvisRepoRoot 'desktop\backend\jarvis_bg.wasm'))) { throw 'Das Backend (desktop\backend) fehlt.' }
     $jarvisElectronDir = Join-Path $jarvisRepoRoot 'desktop\node_modules\electron\dist'
     if (Test-Path -LiteralPath (Join-Path $jarvisRepoRoot 'frontend\dist\.prebuilt')) {
@@ -72,5 +105,16 @@ try {
         $jarvisShortcut.Save()
         Write-Output "Desktop-Verknüpfung: $jarvisShortcutPath"
     }
-    Write-Output 'Jarvis ist eingerichtet. Start über die Desktop-Verknüpfung; API-Schlüssel in Settings eintragen.'
+    if ($Start) {
+        $running = Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.ExecutablePath -eq $jarvisElectron }
+        if ($running) {
+            Write-Output 'Jarvis läuft bereits.'
+        } else {
+            Start-Process -FilePath $jarvisElectron -ArgumentList ('"' + (Join-Path $jarvisRepoRoot 'desktop') + '"') -WorkingDirectory $jarvisRepoRoot
+            Write-Output 'Jarvis ist eingerichtet und startet jetzt. Der Einrichtungsassistent führt durch KI-Wahl und API-Schlüssel.'
+        }
+        Write-Output 'Später startest du Jarvis mit der Verknüpfung "Jarvis v5" auf dem Desktop.'
+    } else {
+        Write-Output 'Jarvis ist eingerichtet. Start über die Desktop-Verknüpfung "Jarvis v5"; beim ersten Start öffnet sich der Einrichtungsassistent.'
+    }
 } finally { Pop-Location }

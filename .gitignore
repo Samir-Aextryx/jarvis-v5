@@ -55,7 +55,6 @@ backup-updates/
 /backup-updates/
 /.agents/
 /data/
-!/data/.gitkeep
 *.log
 *.pid
 /*-results.txt

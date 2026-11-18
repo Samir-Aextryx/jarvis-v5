@@ -640,9 +640,7 @@ btnSettings.addEventListener("click", (e) => {
   openSettings();
 });
 
-// First-time setup detection — check after a short delay for server readiness
-setTimeout(() => {
-  if (dashboardMode) openSettings();
-  else checkFirstTimeSetup();
-}, 2000);
+// First start opens the setup screen; checkFirstTimeSetup waits for the backend.
+if (dashboardMode) setTimeout(() => openSettings(), 2000);
+else void checkFirstTimeSetup();
 

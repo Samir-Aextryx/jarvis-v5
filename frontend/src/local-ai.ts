@@ -6,7 +6,7 @@
 import { apiGet, apiPost } from './api/client';
 
 type InstalledModel = { name: string; size: number; parameters: string; quantization: string };
-type Recommended = { repo: string; quant: string; label: string; size_gb: number; note: string; model: string; installed: boolean };
+type Recommended = { repo: string; quant: string; label: string; size_gb: number; badge: string; note: string; model: string; installed: boolean };
 type Progress = { state: string; model?: string; status?: string; completed?: number; total?: number; error?: string };
 export type LocalAiStatus = {
   installed: boolean; running: boolean; version: string | null; winget: boolean;
@@ -85,8 +85,10 @@ export function mountLocalAi(root: HTMLElement, onChange?: (status: LocalAiStatu
     const title = q('engine-title'); const text = q('engine-text');
     const install = q<HTMLButtonElement>('install'); const start = q<HTMLButtonElement>('start');
     install.hidden = true; start.hidden = true;
-    q('engine').dataset.state = s.running ? 'ready' : s.installed ? 'stopped' : 'missing';
-    if (s.install.state === 'installing' || s.install.state === 'starting') {
+    const installing = s.install.state === 'installing' || s.install.state === 'starting';
+    q('engine').dataset.state = installing ? 'installing' : s.running ? 'ready' : s.installed ? 'stopped'
+      : s.install.state === 'failed' ? 'failed' : 'missing';
+    if (installing) {
       title.textContent = 'Installing local AI…';
       text.textContent = s.install.message || 'This can take a few minutes.';
     } else if (s.running) {
@@ -175,11 +177,27 @@ export function mountLocalAi(root: HTMLElement, onChange?: (status: LocalAiStatu
     const cards = q('recommended');
     cards.replaceChildren();
     for (const rec of s.recommended) {
-      const card = el('div', 'lai-card');
-      const head = el('div', 'lai-card-head');
-      head.append(el('strong', '', rec.label), el('span', 'lai-size', `${rec.size_gb.toFixed(1)} GB`));
-      card.append(head, el('p', '', rec.note));
       const installed = s.models.find(m => same(m.name, rec.model));
+      const inUseHere = !!installed && same(s.selected, installed.name) && s.active;
+      const card = el('div', 'lai-card' + (inUseHere ? ' in-use' : installed ? ' downloaded' : ''));
+      const head = el('div', 'lai-card-head');
+      head.append(el('strong', '', rec.label));
+      if (rec.badge) {
+        const badge = el('span', 'lai-badge', rec.badge);
+        badge.dataset.kind = rec.badge.toLowerCase().replace(/\s+/g, '-');
+        head.append(badge);
+      }
+      const source = document.createElement('a');
+      source.className = 'lai-source';
+      source.href = `https://huggingface.co/${rec.repo}`;
+      source.target = '_blank'; source.rel = 'noreferrer';
+      source.textContent = rec.repo.split('/')[0];
+      card.append(head, el('p', '', rec.note));
+      const foot = el('div', 'lai-card-foot');
+      const meta = el('span', 'lai-size', `${rec.size_gb.toFixed(1)} GB · `);
+      meta.append(source);
+      foot.append(meta);
+      card.append(foot);
       if (installed) {
         const inUse = same(s.selected, installed.name) && s.active;
         const use = button(inUse ? 'In use' : 'Use', !inUse);
@@ -188,9 +206,9 @@ export function mountLocalAi(root: HTMLElement, onChange?: (status: LocalAiStatu
           await apiPost('/api/local-ai/select', { model: installed.name });
           document.dispatchEvent(new Event('jarvis-ai-settings-changed'));
         }));
-        card.append(use);
+        foot.append(use);
       } else {
-        card.append(pullButton(rec.model, s));
+        foot.append(pullButton(rec.model, s));
       }
       cards.append(card);
     }

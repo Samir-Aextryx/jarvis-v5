@@ -250,7 +250,7 @@ Die Desktop-App sendet während des Sprechens kleine Audioframes an die Live-Spr
 
 Antworten werden abschnittsweise mit Fish Audio gesprochen, während weiterer Text entsteht. Memory, Google, Codex und PC-Aufgaben bleiben verfügbar. Die zusätzliche Wartezeit ist entfernt, Cloud-Dienste benötigen aber weiterhin variable Zeit. 0,5–1,2 Sekunden sind bisher nicht zuverlässig erreicht.
 
-Technische Messwerte liegen ohne Gesprächsinhalte in config/data/voice-latency.jsonl. first_audio bezeichnet den geplanten Wiedergabestart im Browser, keine akustische Messung am Lautsprecher. Details im VOICE-PIPELINE-REPORT.md des Projekts.
+Technische Messwerte liegen ohne Gesprächsinhalte in config/data/voice-latency.jsonl. first_audio bezeichnet den geplanten Wiedergabestart im Browser, keine akustische Messung am Lautsprecher. Details in docs/development/VOICE-PIPELINE-REPORT.md.
 
 
 ## E-Mails senden und Apps bedienen

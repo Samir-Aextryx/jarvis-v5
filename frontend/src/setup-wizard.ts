@@ -21,6 +21,8 @@ let provider: string = 'openai';
 let saved: Record<KeyID, boolean> = { openai: false, fish: false, gemini: false, grok: false, ollama: false };
 let local: ReturnType<typeof mountLocalAi> | null = null;
 let previousFocus: HTMLElement | null = null;
+// First start: every step must be completed, and the screen cannot be closed.
+let required = false;
 
 const html = () => `
   <div class="wizard-backdrop"></div>
@@ -31,6 +33,7 @@ const html = () => `
     </header>
 
     <section class="wizard-step" data-step="0">
+      <div class="wizard-hero" aria-hidden="true"><span></span></div>
       <p class="wizard-eyebrow">SETUP · ABOUT TWO MINUTES</p>
       <h2 id="wizard-title">Welcome to Jarvis</h2>
       <p class="wizard-lead">Your voice assistant for Windows. Let’s choose how Jarvis thinks, how it hears you and how it speaks.</p>
@@ -147,7 +150,8 @@ function show(next: number) {
     item.classList.toggle('current', index === step);
   });
   $('[data-action="back"]').style.visibility = step === 0 || step === 3 ? 'hidden' : 'visible';
-  $('[data-action="skip"]').hidden = !(step === 1 || step === 2);
+  $('[data-action="skip"]').hidden = required || !(step === 1 || step === 2);
+  $('[data-action="later"]').hidden = required;
   $('[data-action="next"]').textContent = step === 3 ? 'Start Jarvis' : 'Continue';
   status('');
   if (step === 2) {
@@ -203,7 +207,7 @@ async function finishLocal(): Promise<boolean> {
   await local?.refresh();
   const current = local?.current();
   if (current?.pull.state === 'downloading') { status('Wait until the download is finished.', true); return false; }
-  if (!current?.selected || !current.models.length) { status('Download a model and select Use, or skip for now.', true); return false; }
+  if (!current?.selected || !current.models.length) { status(required ? 'Download a model and select Use.' : 'Download a model and select Use, or skip for now.', true); return false; }
   await agentRequest('settings', { llm_provider: 'local' });
   return true;
 }
@@ -226,6 +230,8 @@ async function finishVoice(): Promise<boolean> {
     await saveKey('fish', fish); saved.fish = true;
   }
   if (voice) await apiPost('/api/settings/keys', { key_name: 'FISH_VOICE_ID', key_value: voice });
+  if (required && !saved.openai) { status('Jarvis needs an OpenAI key to hear you.', true); $('#wizard-openai-key').focus(); return false; }
+  if (required && !saved.fish) { status('Jarvis needs a Fish Audio key to speak.', true); $('#wizard-fish-key').focus(); return false; }
   for (const extra of EXTRA_KEYS) {
     const field = $<HTMLInputElement>(`#wizard-extra-${extra.id}`);
     const value = field.value.trim();
@@ -244,6 +250,7 @@ async function next(skip = false) {
   try {
     if (step === 0) {
       const user_name = ($('#wizard-name') as HTMLInputElement).value.trim();
+      if (required && !user_name) { status('Enter your name.', true); $('#wizard-name').focus(); return; }
       const honorific = ($('#wizard-honorific') as HTMLSelectElement).value;
       const prefs = await apiGet<{ stt_keywords: string }>('/api/settings/preferences').catch(() => ({ stt_keywords: '' }));
       await apiPost('/api/settings/preferences', { user_name, honorific, stt_keywords: prefs.stt_keywords || '' });
@@ -279,15 +286,17 @@ function build() {
   $('[data-action="back"]').addEventListener('click', () => show(Math.max(0, step - 1)));
   $('[data-action="later"]').addEventListener('click', closeSetupWizard);
   root.addEventListener('keydown', event => {
-    if (event.key === 'Escape') { event.preventDefault(); closeSetupWizard(); }
+    if (event.key === 'Escape') { event.preventDefault(); if (!required) closeSetupWizard(); }
     if (event.key === 'Enter' && (event.target as HTMLElement).tagName === 'INPUT' && (event.target as HTMLInputElement).type !== 'search') {
       event.preventDefault(); void next();
     }
   });
 }
 
-export async function openSetupWizard() {
+export async function openSetupWizard(options: { required?: boolean } = {}) {
   if (!root) build();
+  required = !!options.required;
+  root!.classList.toggle('required', required);
   previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   root!.classList.add('open');
   try {

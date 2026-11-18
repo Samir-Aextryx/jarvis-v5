@@ -32,10 +32,9 @@ No Git, Node.js, Python or Rust needed; Windows 10 or 11 is enough.
 1. Download **`Jarvis-v5.x.x-windows.zip`** from the [latest release](https://github.com/Samir-Aextryx/jarvis-v5/releases/latest).
 2. Right-click the ZIP, choose **Properties**, tick **Unblock** and select **OK**. Windows marks downloaded files, and this lets the setup run.
 3. Extract the ZIP into a folder you keep, for example `Documents\Jarvis-v5`.
-4. Double-click **`Install Jarvis.cmd`**. It downloads the official Electron runtime, checks it against a pinned SHA-256 and puts a **Jarvis v5** shortcut on your desktop.
-5. Start Jarvis with the shortcut. The setup assistant opens and walks you through the AI choice (cloud or local) and your API keys.
+4. Double-click **`Install Jarvis.cmd`**. It downloads the official Electron runtime, checks it against a pinned SHA-256, puts a **Jarvis v5** shortcut on your desktop and starts Jarvis. The setup assistant then walks you through the AI choice (cloud or local) and your API keys.
 
-The ZIP is the complete source code plus the built interface; it contains no executable. Every release also offers the plain source code. To update, extract the new release into the same folder and run `Install Jarvis.cmd` again; your data is kept.
+The extracted folder holds just `Install Jarvis.cmd`, this README, the license and the folder `app`, which contains the complete source code and the built interface. There is no executable in it. Every release also offers the plain source code. To update, extract the new release into the same folder and run `Install Jarvis.cmd` again; your data is kept, and files of an older version go to the Recycle Bin.
 
 ## Install from source
 
@@ -74,7 +73,7 @@ The local auth token is held in Windows Credential Manager. WebSockets authentic
 
 Personal data (`.env`, databases, `MEMORY.md`) is runtime data, excluded from Git. Never commit keys or personal records.
 
-See [the user guide](docs/Jarvis-v5-Hilfe.md), [Windows setup](docs/WINDOWS-SETUP.md), [AI providers](docs/AI-PROVIDERS.md) and [the contributing guide](docs/CONTRIBUTING.md).
+See [the user guide](docs/Jarvis-v5-Hilfe.md), [Windows setup](docs/WINDOWS-SETUP.md), [AI providers](docs/AI-PROVIDERS.md) and [the contributing guide](docs/CONTRIBUTING.md). Development notes and earlier reports are in [docs/development](docs/development/).
 
 ## License
 

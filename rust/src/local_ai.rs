@@ -14,11 +14,22 @@ const OLLAMA: &str = "http://127.0.0.1:11434";
 const HF: &str = "https://huggingface.co";
 
 /// Tested picks for voice replies, from small to large.
-const RECOMMENDED: [(&str, &str, &str, f64, &str); 4] = [
-    ("lmstudio-community/Qwen3-4B-Instruct-2507-GGUF", "Q4_K_M", "Qwen3 4B Instruct", 2.5, "Fast spoken replies. Needs about 6 GB of RAM."),
-    ("Qwen/Qwen3-8B-GGUF", "Q4_K_M", "Qwen3 8B", 5.0, "Smarter, a little slower. Needs about 10 GB of RAM."),
-    ("ggml-org/gpt-oss-20b-GGUF", "MXFP4", "GPT-OSS 20B", 12.1, "Strongest choice. Needs 16 GB of RAM or a large graphics card."),
-    ("Qwen/Qwen2.5-1.5B-Instruct-GGUF", "Q4_K_M", "Qwen2.5 1.5B Instruct", 1.1, "Smallest and quickest, for older PCs."),
+/// (repository, quantization, name, download size in GB, badge, note), smallest first.
+/// Each tag matches exactly one GGUF file in its repository (checked 2026-11-18).
+const RECOMMENDED: [(&str, &str, &str, f64, &str, &str); 13] = [
+    ("Qwen/Qwen2.5-1.5B-Instruct-GGUF", "Q4_K_M", "Qwen2.5 1.5B Instruct", 1.1, "Smallest", "Quickest, for older PCs. About 4 GB of RAM."),
+    ("unsloth/Llama-3.2-3B-Instruct-GGUF", "Q4_K_M", "Llama 3.2 3B Instruct", 2.0, "", "Meta's small model. Quick answers with about 5 GB of RAM."),
+    ("lmstudio-community/Qwen3-4B-Instruct-2507-GGUF", "Q4_K_M", "Qwen3 4B Instruct", 2.5, "Recommended", "Fast spoken replies. About 6 GB of RAM."),
+    ("unsloth/Phi-4-mini-instruct-GGUF", "Q4_K_M", "Phi-4 mini", 2.5, "", "Microsoft's compact model, good at reasoning. About 6 GB of RAM."),
+    ("unsloth/gemma-4-E4B-it-GGUF", "Q4_K_M", "Gemma 4 E4B", 5.0, "", "Google's efficient model for laptops. About 8 GB of RAM."),
+    ("Qwen/Qwen3-8B-GGUF", "Q4_K_M", "Qwen3 8B", 5.0, "Thinks", "Smarter, a little slower. About 10 GB of RAM."),
+    ("unsloth/gemma-4-12b-it-GGUF", "Q4_K_M", "Gemma 4 12B", 7.1, "", "Strong all-rounder. About 12 GB of RAM or an 8 GB graphics card."),
+    ("ggml-org/gpt-oss-20b-GGUF", "MXFP4", "GPT-OSS 20B", 12.1, "Thinks", "OpenAI's open model. 16 GB of RAM or a large graphics card."),
+    ("unsloth/Mistral-Small-3.2-24B-Instruct-2506-GGUF", "Q4_K_M", "Mistral Small 3.2 24B", 14.3, "", "Precise and multilingual. 20 GB of RAM or a 16 GB graphics card."),
+    ("unsloth/gemma-4-26B-A4B-it-GGUF", "Q4_K_M", "Gemma 4 26B A4B", 16.9, "Fast", "Big-model quality at small-model speed. About 20 GB of RAM."),
+    ("unsloth/Qwen3.8-27B-GGUF", "Q4_K_M", "Qwen3.8 27B", 16.6, "Top quality", "For strong PCs. 24 GB of RAM or a 16 to 24 GB graphics card."),
+    ("huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF", "Q4_K_M", "Qwen3.8 27B Abliterated", 16.6, "Uncensored", "Qwen3.8 27B with refusals removed by huihui-ai. No content filter, so use it responsibly. 24 GB of RAM."),
+    ("unsloth/gemma-4-31B-it-GGUF", "Q4_K_M", "Gemma 4 31B", 18.3, "", "Google's largest Gemma. 24 GB of RAM or a 24 GB graphics card."),
 ];
 
 struct State {
@@ -201,9 +212,9 @@ pub async fn status() -> Value {
     let selected = selected_model();
     let recommended: Vec<Value> = RECOMMENDED
         .iter()
-        .map(|(repo, quant, label, gb, note)| {
+        .map(|(repo, quant, label, gb, badge, note)| {
             let model = format!("hf.co/{repo}:{quant}");
-            json!({ "repo": repo, "quant": quant, "label": label, "size_gb": gb, "note": note,
+            json!({ "repo": repo, "quant": quant, "label": label, "size_gb": gb, "badge": badge, "note": note,
                     "model": model, "installed": models.iter().any(|m| same_model(m["name"].as_str().unwrap_or(""), &model)) })
         })
         .collect();
@@ -223,6 +234,48 @@ pub async fn status() -> Value {
 
 // ---- install ---------------------------------------------------------------------
 
+const INSTALL_TIMEOUT_MS: u64 = 3 * 60 * 60 * 1000;
+
+/// Bytes winget has downloaded for Ollama since `since` (its temp folder).
+fn downloaded_bytes(since: f64) -> u64 {
+    let root = fs::join(&config::paths().temp, "WinGet");
+    fs::list_dir(&root)
+        .iter()
+        .filter(|d| d.dir && d.name.to_ascii_lowercase().starts_with("ollama.ollama"))
+        .flat_map(|d| {
+            let dir = fs::join(&root, &d.name);
+            fs::list_dir(&dir).into_iter().filter_map(move |f| fs::stat(&fs::join(&dir, &f.name)))
+        })
+        .filter(|s| s.file && s.mtime >= since - 5000.0)
+        .map(|s| s.size)
+        .max()
+        .unwrap_or(0)
+}
+
+/// Shows how far the Ollama download is while winget runs.
+async fn watch_download(started: f64) {
+    let (mut last, mut still) = (0, 0);
+    loop {
+        host::sleep(2000.0).await;
+        if STATE.with(|s| s.borrow().install["state"] != "installing") {
+            return;
+        }
+        let bytes = downloaded_bytes(started);
+        if bytes > last {
+            (last, still) = (bytes, 0);
+            set_install("installing", &format!(
+                "Downloading Ollama: {:.2} GB so far. Keep Jarvis open until it is done.",
+                bytes as f64 / 1e9
+            ));
+        } else if last > 0 {
+            still += 1;
+            if still == 5 {
+                set_install("installing", "Setting up Ollama. This takes a minute.");
+            }
+        }
+    }
+}
+
 /// Installs the official Ollama package for this user with winget, in the background.
 pub fn start_install() -> Res<Value> {
     if executable().is_some() {
@@ -234,14 +287,23 @@ pub fn start_install() -> Res<Value> {
     let Some(winget) = winget() else {
         return Err("Windows Package Manager (winget) is missing. Install Ollama from ollama.com/download, then come back.".into());
     };
-    set_install("installing", "Installing Ollama. This can take a few minutes.");
+    set_install("installing", "Installing Ollama. The download is about 2 GB, so this can take a while.");
+    let started = host::now_ms();
+    wasm_bindgen_futures::spawn_local(watch_download(started));
     wasm_bindgen_futures::spawn_local(async move {
         let args = ["install", "--id", "Ollama.Ollama", "--exact", "--silent", "--scope", "user",
                     "--accept-package-agreements", "--accept-source-agreements", "--disable-interactivity"];
-        let out = host::run(&winget, &args, json!({ "timeoutMs": 1_200_000 })).await;
+        // The installer is large; a slow connection needs far more than minutes.
+        let out = host::run(&winget, &args, json!({ "timeoutMs": INSTALL_TIMEOUT_MS })).await;
         if executable().is_none() {
-            host::log("warning", &format!("Ollama install via winget ended with code {}", out.code));
-            set_install("failed", "Ollama could not be installed. Install it from ollama.com/download, then come back.");
+            let timed_out = host::now_ms() - started >= INSTALL_TIMEOUT_MS as f64 - 1000.0;
+            host::log("warning", &format!("Ollama install via winget ended with code {} (0x{:08X}){}",
+                out.code, out.code as u32, if timed_out { " after the time limit" } else { "" }));
+            set_install("failed", if timed_out {
+                "The Ollama download took too long. Check the internet connection and try again, or install it from ollama.com/download."
+            } else {
+                "Ollama could not be installed. Try again, or install it from ollama.com/download, then come back."
+            });
             return;
         }
         set_install("starting", "Ollama is installed. Starting it.");

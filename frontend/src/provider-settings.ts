@@ -21,7 +21,8 @@ export type KeyID = typeof keyDefs[number]['id'];
 const keyCard = (key: typeof keyDefs[number]) => `
   <div class="key-card" id="key-card-${key.id}">
     <div class="key-card-head">
-      <div><strong>${key.name}</strong><small>${key.purpose}</small></div>
+      <span class="key-avatar" data-key="${key.id}" aria-hidden="true">${key.name.replace(/^(Google|xAI) /, '')[0]}</span>
+      <div class="key-card-title"><strong>${key.name}</strong><small>${key.purpose}</small></div>
       <span class="key-chip" id="key-chip-${key.id}">Checking…</span>
     </div>
     <div class="settings-input-row">
