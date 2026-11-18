@@ -63,7 +63,7 @@ function buildPanelHTML(): string {
         <div class="settings-brand">
           <span class="settings-logo" aria-hidden="true"><span></span></span>
           <div class="settings-heading">
-            <span class="settings-eyebrow">JARVIS <span id="settings-version"></span></span>
+            <span class="settings-eyebrow">Jarvis <span id="settings-version"></span></span>
             <h2 id="settings-title">Settings</h2>
           </div>
         </div>
